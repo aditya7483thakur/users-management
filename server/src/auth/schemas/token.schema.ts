@@ -10,19 +10,33 @@ export enum TokenType {
 
 @Schema({ timestamps: true })
 export class Token {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'User',
+    required: true,
+  })
   user: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({
+    required: true,
+    trim: true,
+  })
   token: string;
 
-  @Prop({ required: true, enum: TokenType })
+  @Prop({
+    required: true,
+    enum: TokenType,
+  })
   type: TokenType;
 
-  @Prop({ required: true })
+  @Prop({
+    required: true,
+  })
   expiresAt: Date;
 }
 
+// Create schema
 export const TokenSchema = SchemaFactory.createForClass(Token);
 
+// TTL index for automatic deletion
 TokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });

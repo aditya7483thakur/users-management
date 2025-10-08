@@ -30,7 +30,6 @@ export class AuthService {
     const user = await this.userModel.create({
       name,
       email,
-      passwordHash: '',
       isVerified: false,
     });
 

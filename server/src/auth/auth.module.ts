@@ -13,10 +13,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       { name: User.name, schema: UserSchema },
       { name: Token.name, schema: TokenSchema },
     ]),
-    // JwtModule.register({
-    //   secret: process.env.JWT_SECRET,
-    //   signOptions: { expiresIn: '7d' },
-    // }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
