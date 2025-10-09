@@ -1,10 +1,24 @@
 // src/auth/controllers/auth.controller.ts
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Request,
+  UseGuards,
+  Delete,
+  Param,
+  Patch,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { JwtAuthGuard } from './guard/jwt-auth.guard';
+import { ChangeThemeDto } from './dto/theme-change.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { changePasswordDto } from './dto/change-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -47,22 +61,84 @@ export class AuthController {
   }
 
   // -------------------------
-  //  get current user profile
+  // 5️⃣ Get current user profile
   // -------------------------
 
-  // -------------------------
-  //  update user
-  // -------------------------
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  async getProfile(@Request() req) {
+    return this.authService.getUser(req.user.sub);
+  }
 
-  // -------------------------
-  //  get all users
-  // -------------------------
+  // // -------------------------
+  // // 6️⃣ Update user
+  // // -------------------------
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(@Request() req, @Body() dto: UpdateUserDto) {
+    return this.authService.updateUser(req.user.sub, dto);
+  }
 
-  // ----------------------------------------
-  //  delete an user (me or any other user)
-  // ----------------------------------------
+  @UseGuards(JwtAuthGuard)
+  @Patch('update-password')
+  async changePassword(@Request() req, @Body() dto: changePasswordDto) {
+    // Extract the current token from the Authorization header
+    const authHeader = req.headers['authorization'] || '';
+    const currentToken = authHeader.replace('Bearer ', '');
 
-  // -------------------------
-  //  change theme
-  // -------------------------
+    return this.authService.changePassword(
+      req.user.sub,
+      dto.oldPassword,
+      dto.newPassword,
+      dto.confirmPassword,
+      currentToken, // pass the current token to the service
+    );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('logout')
+  async logout(@Request() req) {
+    const userId = req.user.sub;
+
+    // Extract the current token from Authorization header
+    const authHeader = req.headers['authorization'] || '';
+    const currentToken = authHeader.replace('Bearer ', '');
+
+    return this.authService.logout(userId, currentToken);
+  }
+
+  // // -------------------------
+  // // 7️⃣ Get all users (admin)
+  // // -------------------------
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  async getAllUsers() {
+    return this.authService.getAllUsers();
+  }
+
+  // // -------------------------
+  // // 8️⃣ Delete other's account
+  // // -------------------------
+  @UseGuards(JwtAuthGuard)
+  @Delete('me')
+  async deleteMe(@Request() req) {
+    return this.authService.deleteUser(req.user.sub);
+  }
+
+  // // -------------------------
+  // // 9 Delete other's account
+  // // -------------------------
+  @Delete(':id')
+  async deleteUser(@Param('id') id: string) {
+    return this.authService.deleteUser(id);
+  }
+
+  // // -------------------------
+  // // 10 Change theme
+  // // -------------------------
+  @UseGuards(JwtAuthGuard)
+  @Patch('theme')
+  async changeTheme(@Request() req, @Body() dto: ChangeThemeDto) {
+    return this.authService.changeTheme(req.user.sub, dto.theme);
+  }
 }
