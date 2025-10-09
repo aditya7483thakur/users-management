@@ -1,4 +1,3 @@
-// src/auth/controllers/auth.controller.ts
 import {
   Controller,
   Post,
@@ -24,33 +23,25 @@ import { changePasswordDto } from './dto/change-password.dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // -------------------------
-  // 1️⃣ Register user → sends email verification link
-  // -------------------------
+  // Register user → sends email verification link
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto.name, dto.email);
   }
 
-  // -------------------------
-  // 2️⃣ Login
-  // -------------------------
+  // Login
   @Post('login')
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto.email, dto.password);
   }
 
-  // -------------------------
-  // 3️⃣ Forgot Password → sends reset email
-  // -------------------------
+  // Forgot Password → sends reset email
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
 
-  // -------------------------
-  // 4️⃣ Set Password → handles both first-time verification & password reset
-  // -------------------------
+  // Set Password → handles both first-time verification & password reset
   @Post('set-password')
   async setPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.setPassword(
@@ -60,9 +51,7 @@ export class AuthController {
     );
   }
 
-  // -------------------------
-  // 5️⃣ Get current user profile
-  // -------------------------
+  // Get current user profile
 
   @UseGuards(JwtAuthGuard)
   @Get('me')
@@ -70,9 +59,7 @@ export class AuthController {
     return this.authService.getUser(req.user.sub);
   }
 
-  // // -------------------------
-  // // 6️⃣ Update user
-  // // -------------------------
+  // Update user
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   async updateProfile(@Request() req, @Body() dto: UpdateUserDto) {
@@ -91,51 +78,43 @@ export class AuthController {
       dto.oldPassword,
       dto.newPassword,
       dto.confirmPassword,
-      currentToken, // pass the current token to the service
+      currentToken,
     );
   }
 
+  // Logout
   @UseGuards(JwtAuthGuard)
   @Patch('logout')
   async logout(@Request() req) {
     const userId = req.user.sub;
 
-    // Extract the current token from Authorization header
     const authHeader = req.headers['authorization'] || '';
     const currentToken = authHeader.replace('Bearer ', '');
 
     return this.authService.logout(userId, currentToken);
   }
 
-  // // -------------------------
-  // // 7️⃣ Get all users (admin)
-  // // -------------------------
+  // Get all users (admin)
   @UseGuards(JwtAuthGuard)
   @Get()
   async getAllUsers() {
     return this.authService.getAllUsers();
   }
 
-  // // -------------------------
-  // // 8️⃣ Delete other's account
-  // // -------------------------
+  // Delete other's account
   @UseGuards(JwtAuthGuard)
   @Delete('me')
   async deleteMe(@Request() req) {
     return this.authService.deleteUser(req.user.sub);
   }
 
-  // // -------------------------
-  // // 9 Delete other's account
-  // // -------------------------
+  // Delete other's account
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     return this.authService.deleteUser(id);
   }
 
-  // // -------------------------
-  // // 10 Change theme
-  // // -------------------------
+  // Change theme
   @UseGuards(JwtAuthGuard)
   @Patch('theme')
   async changeTheme(@Request() req, @Body() dto: ChangeThemeDto) {
