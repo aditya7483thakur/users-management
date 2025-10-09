@@ -11,6 +11,7 @@ import { Token, TokenDocument, TokenType } from './schemas/token.schema';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { JwtService } from '@nestjs/jwt';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -57,13 +58,26 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
-    console.log(1);
     const jwt = this.jwtService.sign({
       sub: user._id.toString(),
-      email: user.email,
     });
-    console.log(2);
+
+    // Save JWT in user's jwt array
+    user.jwt.push(jwt);
+    await user.save();
     return { token: jwt };
+  }
+
+  async logout(userId: string, currentToken: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    // Remove the current token from the jwt array
+    user.jwt = user.jwt.filter((token) => token !== currentToken);
+
+    await user.save();
+
+    return { message: 'Logged out successfully' };
   }
 
   // -------------------------
@@ -116,5 +130,83 @@ export class AuthService {
     await record.deleteOne();
 
     return { message: 'Password set successfully' };
+  }
+
+  async changePassword(
+    userId: string,
+    oldPassword: string,
+    newPassword: string,
+    confirmPassword: string,
+    currentToken: string,
+  ) {
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException("Passwords don't match");
+    }
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    // Verify old password
+    const isValid = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!isValid) throw new BadRequestException('Old password is incorrect');
+
+    // Hash and set the new password
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+
+    // Keep only the current JWT, log out all other sessions
+    user.jwt = [currentToken];
+
+    await user.save();
+
+    return { message: 'Password changed successfully' };
+  }
+
+  // -------------------------
+  // 5️⃣ Get user profile
+  // -------------------------
+  async getUser(userId: string) {
+    const user = await this.userModel
+      .findById(userId)
+      .select('-passwordHash -jwt');
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  // -------------------------
+  // 6️⃣ Update user profile
+  // -------------------------
+  async updateUser(userId: string, dto: UpdateUserDto) {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, dto, { new: true })
+      .select('-passwordHash -jwt');
+
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
+
+  // -------------------------
+  // 7️⃣ Get all users
+  // -------------------------
+  async getAllUsers() {
+    return this.userModel.find().select('-passwordHash -jwt -email');
+  }
+
+  // -------------------------
+  // 8️⃣ Delete user
+  // -------------------------
+  async deleteUser(userId: string) {
+    const user = await this.userModel.findByIdAndDelete(userId);
+    if (!user) throw new NotFoundException('User not found');
+    return { message: 'User deleted successfully' };
+  }
+
+  // -------------------------
+  // 9️⃣ Change theme
+  // -------------------------
+  async changeTheme(userId: string, theme: string) {
+    const user = await this.userModel
+      .findByIdAndUpdate(userId, { theme }, { new: true })
+      .select('-passwordHash');
+    if (!user) throw new NotFoundException('User not found');
+    return user;
   }
 }

@@ -3,6 +3,12 @@ import { Document } from 'mongoose';
 
 export type UserDocument = User & Document & { _id: string };
 
+export enum Theme {
+  LIGHT = 'light',
+  DARK = 'dark',
+  RED = 'red',
+}
+
 @Schema({ timestamps: true })
 export class User {
   @Prop({
@@ -30,8 +36,14 @@ export class User {
   @Prop({ default: false })
   isVerified: boolean;
 
-  @Prop({ default: 'user' })
-  role: string; // e.g., 'user', 'admin'
+  @Prop({
+    enum: Theme,
+    default: Theme.LIGHT,
+  })
+  theme: Theme;
+
+  @Prop({ type: [String], default: [] })
+  jwt: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
