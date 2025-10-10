@@ -21,20 +21,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(req: Request, payload: JwtPayload) {
-    const authHeader = req.headers['authorization'] as string | undefined;
-    const token = authHeader?.split(' ')[1]; // Bearer <token>
-
-    if (!token) {
-      throw new UnauthorizedException('No token provided');
-    }
-
+    const { jti, sub } = payload;
     const user = await this.userModel.findById(payload.sub);
     if (!user) throw new UnauthorizedException('User no longer exists');
 
-    if (!user.jwt.includes(token)) {
+    if (!user.jwt.includes(jti)) {
       throw new UnauthorizedException('Token is no longer valid');
     }
 
-    return { sub: payload.sub };
+    return { sub: payload.sub, jti };
   }
 }

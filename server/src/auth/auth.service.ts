@@ -57,13 +57,14 @@ export class AuthService {
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
-
+    const jti = uuidv4();
     const jwt = this.jwtService.sign({
       sub: user._id.toString(),
+      jti,
     });
 
     // Save JWT in user's jwt array
-    user.jwt.push(jwt);
+    user.jwt.push(jti);
     await user.save();
     return { token: jwt };
   }
