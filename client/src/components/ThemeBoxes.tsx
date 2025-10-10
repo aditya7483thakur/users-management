@@ -1,10 +1,17 @@
 "use client";
-import { useTheme } from "@/components/ThemeProvider";
+import { useState } from "react";
 
 export default function ThemeBoxes() {
-  const { setTheme } = useTheme();
+  const [theme, setThemeState] = useState("light");
+  // const { setTheme } = useTheme();
 
   const themes = ["light", "dark", "red"];
+
+  const setTheme = (newTheme: string) => {
+    document.documentElement.setAttribute("data-theme", newTheme);
+    localStorage.setItem("theme", newTheme);
+    setThemeState(newTheme);
+  };
 
   return (
     <div className="flex gap-4">
