@@ -117,28 +117,28 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1h expiry
     });
 
-    const verificationLink = `http://localhost:3000/set-password?token=${token}`;
+    const resetLink = `http://localhost:3000/set-password?token=${token}`;
 
     await sendEmail(
       user.email,
-      'Complete Your Registration - Set Your Password',
+      'Reset Your Password',
       `
-        <p>Hi ${name},</p>
-        <p>Thanks for registering! Click the button below to set your password and complete registration:</p>
-        <a href="${verificationLink}" 
-           style="
-             display: inline-block;
-             padding: 10px 20px;
-             font-size: 16px;
-             color: white;
-             background-color: #2679f3;
-             text-decoration: none;
-             border-radius: 5px;
-           ">
-           Set My Password
-        </a>
-        <p>This link will expire in 1 hour.</p>
-      `,
+    <p>You requested to reset your password. Click the button below to set a new password:</p>
+    <a href="${resetLink}" 
+       style="
+         display: inline-block;
+         padding: 10px 20px;
+         font-size: 16px;
+         color: white;
+         background-color: #2679f3;
+         text-decoration: none;
+         border-radius: 5px;
+       ">
+       Reset My Password
+    </a>
+    <p>This link will expire in 1 hour.</p>
+    <p>If you did not request a password reset, you can safely ignore this email.</p>
+  `,
     );
 
     return { message: 'Password reset email sent', token };
@@ -224,16 +224,15 @@ export class AuthService {
     const user = await this.userModel
       .findByIdAndUpdate(userId, dto, { new: true })
       .select('-passwordHash -jwt');
-
     if (!user) throw new NotFoundException('User not found');
-    return user;
+    return { message: 'User updated successfully', user };
   }
 
   // -------------------------
   // 7️⃣ Get all users
   // -------------------------
   async getAllUsers() {
-    return this.userModel.find().select('-passwordHash -jwt -email');
+    return this.userModel.find().select('-passwordHash -jwt');
   }
 
   // -------------------------
