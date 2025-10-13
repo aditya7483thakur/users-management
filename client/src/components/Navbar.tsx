@@ -7,9 +7,10 @@ export default function Navbar() {
   if (pathName.startsWith("/dashboard")) {
     return null;
   }
+
   return (
     <nav
-      className="flex justify-between items-center px-8 py-4 border-b shadow-sm sticky top-0 z-10 transition-colors"
+      className="flex justify-between items-center px-8 py-4 shadow-md sticky top-0 z-10 transition-colors"
       style={{
         background: "var(--background)",
         color: "var(--foreground)",
@@ -19,16 +20,16 @@ export default function Navbar() {
         MyApp
       </h2>
 
-      <div className="space-x-6 font-medium">
+      <div className="space-x-4 font-medium flex">
         <Link
           href="/login"
-          className="hover:text-[var(--primary,#2679f3)] transition-colors"
+          className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
         >
           Login
         </Link>
         <Link
           href="/register"
-          className="hover:text-[var(--primary,#2679f3)] transition-colors"
+          className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700 transition"
         >
           Register
         </Link>

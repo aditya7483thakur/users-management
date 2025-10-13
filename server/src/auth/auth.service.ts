@@ -12,6 +12,7 @@ import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { JwtService } from '@nestjs/jwt';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { sendEmail } from 'src/utils/sendEmail';
 
 @Injectable()
 export class AuthService {
@@ -42,9 +43,30 @@ export class AuthService {
       type: TokenType.EMAIL_VERIFICATION,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
     });
+    const verificationLink = `http://localhost:3000/set-password?token=${token}`;
 
-    // TODO: send email with verification link containing token
-    return { message: 'Verification email sent', token }; // token returned for testing
+    await sendEmail(
+      user.email,
+      'Complete Your Registration - Set Your Password',
+      `
+        <p>Hi ${name},</p>
+        <p>Thanks for registering! Click the button below to set your password and complete registration:</p>
+        <a href="${verificationLink}" 
+           style="
+             display: inline-block;
+             padding: 10px 20px;
+             font-size: 16px;
+             color: white;
+             background-color: #2679f3;
+             text-decoration: none;
+             border-radius: 5px;
+           ">
+           Set My Password
+        </a>
+        <p>This link will expire in 24 hours.</p>
+      `,
+    );
+    return { message: 'Verification email sent', token };
   }
 
   // -------------------------
@@ -63,16 +85,15 @@ export class AuthService {
       jti,
     });
 
-    // Save JWT in user's jwt array
     user.jwt.push(jti);
     await user.save();
-    return { token: jwt };
+    return { message: 'Login successful!', token: jwt };
   }
 
   async logout(userId: string, currentToken: string) {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
-
+    console.log(currentToken);
     // Remove the current token from the jwt array
     user.jwt = user.jwt.filter((token) => token !== currentToken);
 
@@ -96,8 +117,31 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1h expiry
     });
 
-    // TODO: send email with reset link containing token
-    return { message: 'Password reset email sent', token }; // token returned for testing
+    const verificationLink = `http://localhost:3000/set-password?token=${token}`;
+
+    await sendEmail(
+      user.email,
+      'Complete Your Registration - Set Your Password',
+      `
+        <p>Hi ${name},</p>
+        <p>Thanks for registering! Click the button below to set your password and complete registration:</p>
+        <a href="${verificationLink}" 
+           style="
+             display: inline-block;
+             padding: 10px 20px;
+             font-size: 16px;
+             color: white;
+             background-color: #2679f3;
+             text-decoration: none;
+             border-radius: 5px;
+           ">
+           Set My Password
+        </a>
+        <p>This link will expire in 1 hour.</p>
+      `,
+    );
+
+    return { message: 'Password reset email sent', token };
   }
 
   // -------------------------
@@ -133,6 +177,7 @@ export class AuthService {
     return { message: 'Password set successfully' };
   }
 
+  // change password for logged-in users
   async changePassword(
     userId: string,
     oldPassword: string,

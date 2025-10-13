@@ -1,26 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
-import { loginUserAPI } from "@/services/auth";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { setPasswordAPI } from "@/services/auth";
 
-export default function LoginPage() {
-  const [email, setEmail] = useState("");
+export default function SetPasswordPage() {
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") || "";
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: loginUserAPI,
+  const { isPending, mutate } = useMutation({
+    mutationFn: setPasswordAPI,
     onSuccess: (data) => {
       toast.success(data.message);
-      setEmail("");
       setPassword("");
-      router.push("/dashboard");
+      setConfirmPassword("");
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -29,51 +27,47 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutate({ email, password });
+    if (!token) return toast.error("Invalid or missing token");
+    if (password !== confirmPassword)
+      return toast.error("Passwords do not match");
+    console.log({ token, password, confirmPassword });
+    mutate({ token, password, confirmPassword });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
         <h1 className="text-2xl font-semibold mb-6 text-center text-gray-800">
-          Login
+          Set New Password
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700">
-              Email
+              New Password
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Enter your email"
+              placeholder="Enter new password"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1 text-gray-700">
-              Password
+              Confirm Password
             </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="Enter your password"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span
-                className="absolute right-3 top-2.5 cursor-pointer text-gray-500 hover:text-gray-700 transition"
-                onClick={() => setShowPassword((prev) => !prev)}
-              >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </span>
-            </div>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              placeholder="Confirm new password"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
 
           <button
@@ -83,7 +77,7 @@ export default function LoginPage() {
             }`}
             disabled={isPending}
           >
-            {isPending ? "Logging..." : "Login"}
+            {isPending ? "Submitting..." : "Set Password"}
           </button>
         </form>
       </div>

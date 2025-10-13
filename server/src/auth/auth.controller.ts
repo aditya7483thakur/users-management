@@ -69,10 +69,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Patch('update-password')
   async changePassword(@Request() req, @Body() dto: changePasswordDto) {
-    // Extract the current token from the Authorization header
-    const authHeader = req.headers['authorization'] || '';
-    const currentToken = authHeader.replace('Bearer ', '');
-
+    const currentToken = req.user.jti;
     return this.authService.changePassword(
       req.user.sub,
       dto.oldPassword,
@@ -87,9 +84,7 @@ export class AuthController {
   @Patch('logout')
   async logout(@Request() req) {
     const userId = req.user.sub;
-
-    const authHeader = req.headers['authorization'] || '';
-    const currentToken = authHeader.replace('Bearer ', '');
+    const currentToken = req.user.jti;
 
     return this.authService.logout(userId, currentToken);
   }
