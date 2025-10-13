@@ -140,7 +140,7 @@ export async function getAllUsersAPI() {
 
 export async function deleteMeAPI() {
   try {
-    const res = await axiosInstance.delete("/me");
+    const res = await axiosInstance.delete("/auth/me");
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -153,7 +153,7 @@ export async function deleteMeAPI() {
 
 export async function deleteUserAPI(userId: string) {
   try {
-    const res = await axios.delete(`/auth/${userId}`);
+    const res = await axiosInstance.delete(`/auth/${userId}`);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -166,7 +166,7 @@ export async function deleteUserAPI(userId: string) {
 
 export async function changeThemeAPI(data: ChangeThemeData) {
   try {
-    const res = await axios.patch("/auth/theme", data);
+    const res = await axiosInstance.patch("/auth/theme", data);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {

@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
-html[data-theme="light"] {
-  --background: #fff;
-  --foreground: #171717;
+.theme-light {
+  --bg: white;
+  --text: black;
+  background-color: var(--bg);
+  color: var(--text);
 }
-html[data-theme="dark"] {
-  --background: #000;
-  --foreground: #ededed;
+.theme-dark {
+  --bg: black;
+  --text: white;
+  background-color: var(--bg);
+  color: var(--text);
 }
-html[data-theme="red"] {
-  --background: #ffdddd;
-  --foreground: #990000;
+.theme-red {
+  --bg: #fee2e2;
+  --text: #b91c1c;
+  background-color: var(--bg);
+  color: var(--text);
 }
 
 body {

@@ -19,8 +19,8 @@ export interface ForgotPasswordData {
 }
 
 export interface UpdateProfileData {
-  email: string;
-  name: string;
+  email?: string;
+  name?: string;
 }
 
 export interface ChangePasswordData {
