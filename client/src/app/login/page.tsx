@@ -1,7 +1,6 @@
 "use client";
 
 import { useReducer } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { forgotPasswordAPI, loginUserAPI } from "@/services/auth";
 import toast from "react-hot-toast";
@@ -74,8 +73,8 @@ export default function LoginPage() {
     mutationFn: forgotPasswordAPI,
     onSuccess: (data) => {
       toast.success(data.message);
-      dispatch({ type: "RESET_LOGIN" });
-      router.push("/dashboard");
+      dispatch({ type: "RESET_FORGOT_EMAIL" });
+      dispatch({ type: "CLOSE_FORGOT_MODAL" });
     },
     onError: (err: Error) => {
       console.log("console", err);
@@ -96,11 +95,6 @@ export default function LoginPage() {
     }
 
     forgotPasswordMutate.mutate({ email: state.forgotEmail });
-
-    // TODO: Replace with actual forgot-password API call
-    toast.success("Password reset link sent to your email!");
-    dispatch({ type: "RESET_FORGOT_EMAIL" });
-    dispatch({ type: "CLOSE_FORGOT_MODAL" });
   };
 
   return (
