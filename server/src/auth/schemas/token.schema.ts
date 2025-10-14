@@ -1,12 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
+import { TokenType } from 'src/enums/auth.enums';
 
 export type TokenDocument = Token & Document;
-
-export enum TokenType {
-  EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
-  PASSWORD_RESET = 'PASSWORD_RESET',
-}
 
 @Schema({ timestamps: true })
 export class Token {

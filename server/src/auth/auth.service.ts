@@ -7,12 +7,13 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User, UserDocument } from './schemas/user.schema';
-import { Token, TokenDocument, TokenType } from './schemas/token.schema';
+import { Token, TokenDocument } from './schemas/token.schema';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { JwtService } from '@nestjs/jwt';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { sendEmail } from 'src/utils/sendEmail';
+import { TokenType } from 'src/enums/auth.enums';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +36,7 @@ export class AuthService {
       isVerified: false,
     });
 
+    console.log(2);
     // Generate verification token
     const token = uuidv4();
     await this.tokenModel.create({
@@ -44,7 +46,7 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
     });
     const verificationLink = `http://localhost:3000/set-password?token=${token}`;
-
+    console.log(process.env.BREVO_API_KEY);
     await sendEmail(
       user.email,
       'Complete Your Registration - Set Your Password',

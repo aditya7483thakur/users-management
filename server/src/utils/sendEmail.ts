@@ -1,36 +1,22 @@
-import nodemailer from 'nodemailer';
+import SibApiV3Sdk from 'sib-api-v3-sdk';
 
-/**
- * Sends an email using Nodemailer + Gmail
- * @param to - Recipient's email
- * @param subject - Email subject
- * @param html - HTML content
- */
 export async function sendEmail(
-  to: string,
+  email: string,
   subject: string,
-  html: string,
-): Promise<void> {
-  try {
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.SMTP_USER, // your Gmail
-        pass: process.env.SMTP_PASS, // app password (not your Gmail password)
-      },
-    });
+  htmlContent: string,
+) {
+  console.log(process.env.BREVO_API_KEY);
+  const defaultClient = SibApiV3Sdk.ApiClient.instance;
+  defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
 
-    const mailOptions = {
-      from: `"User Support" <${process.env.SMTP_USER}>`,
-      to,
-      subject,
-      html,
-    };
+  const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
 
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent to ${to}`);
-  } catch (error) {
-    console.error('❌ Email send failed:', error);
-    throw new Error('Failed to send email');
-  }
+  await apiInstance.sendTransacEmail({
+    to: [{ email }],
+    sender: { name: 'Control Panel', email: 'aditya.kumar@myrealdata.in' },
+    subject,
+    htmlContent,
+  });
+
+  console.log(`✅ Email sent to ${email}`);
 }
