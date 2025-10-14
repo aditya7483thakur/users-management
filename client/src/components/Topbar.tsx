@@ -5,9 +5,11 @@ import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useThemeStore } from "@/providers/store";
 
-export default function Topbar({ name }: { name: string }) {
+export default function Topbar() {
   const router = useRouter();
+  const { name } = useThemeStore();
 
   const { isPending, mutate } = useMutation({
     mutationFn: logoutAPI,
@@ -40,7 +42,10 @@ export default function Topbar({ name }: { name: string }) {
       }}
     >
       {/* Left side: Greeting */}
-      <span style={themeStyles} className="font-medium px-2 py-1 rounded">
+      <span
+        style={themeStyles}
+        className="font-bold text-2xl px-2 py-1 rounded"
+      >
         Hi {name} 👋
       </span>
 

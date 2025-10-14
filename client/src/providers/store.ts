@@ -4,12 +4,12 @@ interface ThemeState {
   name: string;
   theme: string;
   email: string;
-  setUser: (name: string, theme: string, email: string) => void;
+  setUser: (data: Partial<ThemeState>) => void;
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
   name: "",
   theme: "light",
   email: "",
-  setUser: (name, theme, email) => set({ name, theme, email }),
+  setUser: (data) => set((state) => ({ ...state, ...data })),
 }));

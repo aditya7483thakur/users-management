@@ -1,9 +1,12 @@
 "use client";
-import { Trash2, Mail } from "lucide-react";
+
+import { useState } from "react";
+import { Trash2, Mail, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { deleteUserAPI, getAllUsersAPI } from "@/services/auth";
 import { useThemeStore } from "@/providers/store";
+import Modal from "@/components/Modal";
 
 const modalStyles = {
   backgroundColor: "var(--bg)",
@@ -13,25 +16,57 @@ const modalStyles = {
 
 export default function Page() {
   const { email: currentEmail } = useThemeStore();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  // Fetch all users
   const getAllUsersMutate = useQuery({
     queryKey: ["allUsers"],
     queryFn: getAllUsersAPI,
+    refetchInterval: 1000 * 60 * 5, // every 5 mins
   });
 
+  // Delete user by ID
   const deleteUserMutate = useMutation({
     mutationFn: deleteUserAPI,
     onSuccess: (data) => {
       toast.success(data.message);
+      setIsModalOpen(false);
+      setSelectedUserId(null);
+      getAllUsersMutate.refetch();
     },
     onError: (err: Error) => {
-      console.log("console", err);
       toast.error(err.message);
     },
   });
 
-  const handleDelete = (id: string) => {
-    deleteUserMutate.mutate(id);
+  const openDeleteModal = (id: string) => {
+    setSelectedUserId(id);
+    setIsModalOpen(true);
   };
+
+  const confirmDelete = () => {
+    if (selectedUserId) {
+      deleteUserMutate.mutate(selectedUserId);
+    }
+  };
+
+  const cancelDelete = () => {
+    setSelectedUserId(null);
+    setIsModalOpen(false);
+  };
+
+  // 💡 Loader UI
+  if (getAllUsersMutate.isLoading) {
+    return (
+      <section className="flex flex-col items-center justify-center h-[70vh]">
+        <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-3" />
+        <p className="text-gray-600 font-medium animate-pulse">
+          Loading users...
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section className="p-6 space-y-6" style={modalStyles}>
@@ -75,7 +110,7 @@ export default function Page() {
                     </td>
                     <td className="text-right py-4 px-6">
                       <button
-                        onClick={() => handleDelete(user._id)}
+                        onClick={() => openDeleteModal(user._id)}
                         className="inline-flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-xl transition-all duration-200 hover:scale-[1.05]"
                         style={{
                           borderColor: "var(--primary,#2679f3)",
@@ -92,6 +127,32 @@ export default function Page() {
           </tbody>
         </table>
       </div>
+
+      {/* Confirmation Modal */}
+      <Modal isOpen={isModalOpen} onClose={cancelDelete}>
+        <h3 className="text-lg font-semibold mb-4">Confirm Delete</h3>
+        <p className="mb-6">Are you sure you want to delete this user?</p>
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={cancelDelete}
+            className="px-4 py-2 rounded-lg border border-gray-400 hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={confirmDelete}
+            disabled={deleteUserMutate.isPending}
+            className={`px-4 py-2 rounded-lg text-white transition-all ${
+              deleteUserMutate.isPending
+                ? "bg-red-400 cursor-not-allowed"
+                : "bg-red-600 hover:bg-red-700"
+            }`}
+          >
+            {deleteUserMutate.isPending ? "Deleting..." : "Confirm"}
+          </button>
+        </div>
+      </Modal>
     </section>
   );
 }

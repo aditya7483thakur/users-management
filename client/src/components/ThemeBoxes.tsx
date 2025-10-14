@@ -6,12 +6,12 @@ import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 
 export default function ThemeBoxes() {
-  const { name, setUser } = useThemeStore();
+  const { setUser } = useThemeStore();
 
   const { isPending, mutate, variables } = useMutation({
     mutationFn: changeThemeAPI,
     onSuccess: (data) => {
-      setUser(data.name, data.theme);
+      setUser({ name: data.name, theme: data.theme });
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -26,7 +26,7 @@ export default function ThemeBoxes() {
           key={t}
           onClick={() => mutate({ theme: t })}
           disabled={isPending}
-          className={`w-20 h-20 rounded-lg border hover:opacity-80 transition-colors ${
+          className={`w-48 h-48 rounded-lg border hover:opacity-80 transition-colors ${
             t === "light"
               ? "bg-white text-black"
               : t === "dark"

@@ -3,7 +3,6 @@
 import { useReducer } from "react";
 import { useThemeStore } from "@/providers/store";
 import Modal from "@/components/Modal";
-import { Eye, EyeOff } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import {
   deleteMeAPI,
@@ -86,14 +85,16 @@ function reducer(state: State, action: Action): State {
 }
 
 export default function ProfilePage() {
-  const { theme } = useThemeStore();
+  const { theme, setUser } = useThemeStore();
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
+
   const profileMutation = useMutation({
     mutationFn: updateProfileAPI,
     onSuccess: (data) => {
       toast.success(data.message);
       dispatch({ type: "RESET_NAME_EMAIL" });
+      setUser({ name: data.user.name });
     },
     onError: (err: Error) => {
       console.log(err);
@@ -105,7 +106,7 @@ export default function ProfilePage() {
     mutationFn: updatePasswordAPI,
     onSuccess: (data) => {
       toast.success(data.message);
-      dispatch({ type: "RESET_PASSWORD_FIELDS" }); // reset password fields
+      dispatch({ type: "RESET_PASSWORD_FIELDS" });
       dispatch({ type: "SET_MODAL_OPEN", payload: false });
     },
     onError: (err: Error) => {

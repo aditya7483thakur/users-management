@@ -30,7 +30,11 @@ export default function DashboardLayout({
 
   useEffect(() => {
     if (data) {
-      setUser(data.name, data.theme || "light", data.email);
+      setUser({
+        name: data.name,
+        theme: data.theme,
+        email: data.email,
+      });
     }
   }, [data, setUser]);
 
@@ -51,7 +55,7 @@ export default function DashboardLayout({
     <div className={`min-h-screen theme-${theme} flex`}>
       <Sidebar />
       <div className="flex-1 flex flex-col">
-        <Topbar name={data?.name} />
+        <Topbar />
         <main className="p-6 flex-1">{children}</main>
       </div>
     </div>
