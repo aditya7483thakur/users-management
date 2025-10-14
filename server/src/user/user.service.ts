@@ -4,25 +4,24 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User, UserDocument } from './schemas/user.schema';
-import { Token, TokenDocument } from './schemas/token.schema';
-import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
-import { JwtService } from '@nestjs/jwt';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from '../user/dto/update-user.dto';
 import { sendEmail } from 'src/utils/sendEmail';
 import { TokenType } from 'src/enums/auth.enums';
+import * as bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 
+import { User, UserDocument } from '../user/schemas/user.schema';
+import { Token, TokenDocument } from '../user/schemas/token.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { JwtService } from '@nestjs/jwt';
+import { Model } from 'mongoose';
 @Injectable()
-export class AuthService {
+export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Token.name) private tokenModel: Model<TokenDocument>,
     private jwtService: JwtService,
   ) {}
-
   // -------------------------
   // 1️⃣ Register user & send verification email
   // -------------------------
