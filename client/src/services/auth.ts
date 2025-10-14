@@ -50,7 +50,7 @@ export async function loginUserAPI(data: LoginData) {
 // Forgot Password
 export async function forgotPasswordAPI(data: ForgotPasswordData) {
   try {
-    const res = await axiosInstance.post("/auth/forgot-password", data);
+    const res = await axiosInstance.post("/user/forgot-password", data);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -66,7 +66,7 @@ export async function forgotPasswordAPI(data: ForgotPasswordData) {
 // Set Password
 export async function setPasswordAPI(data: SetPasswordData) {
   try {
-    const res = await axiosInstance.post("/auth/set-password", data);
+    const res = await axiosInstance.post("/user/set-password", data);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -82,7 +82,7 @@ export async function setPasswordAPI(data: SetPasswordData) {
 // get Profile
 export async function getProfileAPI() {
   try {
-    const res = await axiosInstance.get("/auth/me");
+    const res = await axiosInstance.get("/user/me");
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -98,7 +98,7 @@ export async function getProfileAPI() {
 // update profile
 export async function updateProfileAPI(data: UpdateProfileData) {
   try {
-    const res = await axiosInstance.patch("/auth/me", data);
+    const res = await axiosInstance.patch("/user/me", data);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -114,7 +114,7 @@ export async function updateProfileAPI(data: UpdateProfileData) {
 // update password
 export async function updatePasswordAPI(data: ChangePasswordData) {
   try {
-    const res = await axiosInstance.patch("/auth/update-password", data);
+    const res = await axiosInstance.patch("/user/update-password", data);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -143,7 +143,7 @@ export async function logoutAPI() {
 
 export async function getAllUsersAPI() {
   try {
-    const res = await axiosInstance.get("/auth");
+    const res = await axiosInstance.get("/user");
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -158,7 +158,7 @@ export async function getAllUsersAPI() {
 
 export async function deleteMeAPI() {
   try {
-    const res = await axiosInstance.delete("/auth/me");
+    const res = await axiosInstance.delete("/user/me");
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -173,7 +173,7 @@ export async function deleteMeAPI() {
 
 export async function deleteUserAPI(userId: string) {
   try {
-    const res = await axiosInstance.delete(`/auth/${userId}`);
+    const res = await axiosInstance.delete(`/user/${userId}`);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -188,7 +188,7 @@ export async function deleteUserAPI(userId: string) {
 
 export async function changeThemeAPI(data: ChangeThemeData) {
   try {
-    const res = await axiosInstance.patch("/auth/theme", data);
+    const res = await axiosInstance.patch("/theme/change", data);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
