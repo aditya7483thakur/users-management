@@ -29,6 +29,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Token is no longer valid');
     }
 
-    return { sub: payload.sub, jti };
+    return { sub, jti };
   }
 }

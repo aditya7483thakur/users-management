@@ -25,6 +25,7 @@ export default function Sidebar() {
       <nav className="space-y-2">
         {links.map((link) => {
           const isActive = pathname === link.path;
+
           return (
             <Link
               key={link.path}
@@ -34,6 +35,11 @@ export default function Sidebar() {
                   ? "bg-[var(--foreground)] text-[var(--background)]"
                   : "hover:bg-[var(--primary-light,#e8f1ff)] hover:text-[var(--primary,#2679f3)]"
               }`}
+              style={
+                isActive
+                  ? { backgroundColor: "var(--text)", color: "var(--bg)" }
+                  : {}
+              }
             >
               {link.name}
             </Link>

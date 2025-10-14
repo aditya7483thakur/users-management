@@ -1,13 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
+import { Theme } from 'src/enums/auth.enums';
 
 export type UserDocument = User & Document & { _id: string };
-
-export enum Theme {
-  LIGHT = 'light',
-  DARK = 'dark',
-  RED = 'red',
-}
 
 @Schema({ timestamps: true })
 export class User {
