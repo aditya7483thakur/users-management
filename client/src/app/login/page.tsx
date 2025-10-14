@@ -7,11 +7,11 @@ import { forgotPasswordAPI, loginUserAPI } from "@/services/auth";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
+import PasswordInput from "@/components/PasswordInput";
 
 type State = {
   email: string;
   password: string;
-  showPassword: boolean;
   isForgotModalOpen: boolean;
   forgotEmail: string;
 };
@@ -19,7 +19,6 @@ type State = {
 type Action =
   | { type: "SET_EMAIL"; payload: string }
   | { type: "SET_PASSWORD"; payload: string }
-  | { type: "TOGGLE_SHOW_PASSWORD" }
   | { type: "OPEN_FORGOT_MODAL" }
   | { type: "CLOSE_FORGOT_MODAL" }
   | { type: "SET_FORGOT_EMAIL"; payload: string }
@@ -29,7 +28,6 @@ type Action =
 const initialState: State = {
   email: "",
   password: "",
-  showPassword: false,
   isForgotModalOpen: false,
   forgotEmail: "",
 };
@@ -40,8 +38,6 @@ function reducer(state: State, action: Action): State {
       return { ...state, email: action.payload };
     case "SET_PASSWORD":
       return { ...state, password: action.payload };
-    case "TOGGLE_SHOW_PASSWORD":
-      return { ...state, showPassword: !state.showPassword };
     case "OPEN_FORGOT_MODAL":
       return { ...state, isForgotModalOpen: true };
     case "CLOSE_FORGOT_MODAL":
@@ -134,27 +130,16 @@ export default function LoginPage() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={state.showPassword ? "text" : "password"}
-                value={state.password}
-                onChange={(e) =>
-                  dispatch({ type: "SET_PASSWORD", payload: e.target.value })
-                }
-                required
-                placeholder="Enter your password"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span
-                className="absolute right-3 top-2.5 cursor-pointer text-gray-500 hover:text-gray-700 transition"
-                onClick={() => dispatch({ type: "TOGGLE_SHOW_PASSWORD" })}
-              >
-                {state.showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </span>
-            </div>
+            <PasswordInput
+              label="Password"
+              value={state.password}
+              onChange={(e) =>
+                dispatch({ type: "SET_PASSWORD", payload: e.target.value })
+              }
+              placeholder="Enter your password"
+              required
+              name="Password"
+            />
           </div>
 
           {/* Forgot Password */}

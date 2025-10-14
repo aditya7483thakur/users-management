@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { setPasswordAPI } from "@/services/auth";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function SetPasswordPage() {
   const [password, setPassword] = useState("");
@@ -30,7 +31,6 @@ export default function SetPasswordPage() {
     if (!token) return toast.error("Invalid or missing token");
     if (password !== confirmPassword)
       return toast.error("Passwords do not match");
-    console.log({ token, password, confirmPassword });
     mutate({ token, password, confirmPassword });
   };
 
@@ -42,33 +42,23 @@ export default function SetPasswordPage() {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">
-              New Password
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              placeholder="Enter new password"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <PasswordInput
+            label="New Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter new password"
+            required
+            name="newPassword"
+          />
 
-          <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              placeholder="Confirm new password"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <PasswordInput
+            label="Confirm Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm new password"
+            required
+            name="confirmPassword"
+          />
 
           <button
             type="submit"

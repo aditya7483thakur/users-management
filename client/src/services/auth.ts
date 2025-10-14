@@ -17,7 +17,10 @@ export async function registerUserAPI(data: RegisterData) {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message ||
+        "Something went wrong during registration";
+      throw new Error(errorMessage);
     } else {
       throw new Error("Registration failed");
     }
@@ -35,7 +38,9 @@ export async function loginUserAPI(data: LoginData) {
     return responseData;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message || "Something went wrong during login";
+      throw new Error(errorMessage);
     } else {
       throw new Error("Login failed");
     }
@@ -49,7 +54,9 @@ export async function forgotPasswordAPI(data: ForgotPasswordData) {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message || "Failed to send password reset email";
+      throw new Error(errorMessage);
     } else {
       throw new Error("Email sending for password reset failed");
     }
@@ -63,7 +70,9 @@ export async function setPasswordAPI(data: SetPasswordData) {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message || "Failed to set new password";
+      throw new Error(errorMessage);
     } else {
       throw new Error("Password reset failed");
     }
@@ -77,7 +86,9 @@ export async function getProfileAPI() {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message || "Failed to fetch profile";
+      throw new Error(errorMessage);
     } else {
       throw new Error("Profile fetching failed");
     }
@@ -91,7 +102,9 @@ export async function updateProfileAPI(data: UpdateProfileData) {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message || "Failed to update profile";
+      throw new Error(errorMessage);
     } else {
       throw new Error("Profile update failed");
     }
@@ -105,9 +118,11 @@ export async function updatePasswordAPI(data: ChangePasswordData) {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message || "Failed to update profile";
+      throw new Error(errorMessage);
     } else {
-      throw new Error("Registration failed");
+      throw new Error("Failed to update profile");
     }
   }
 }
@@ -118,9 +133,10 @@ export async function logoutAPI() {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage = err.response?.data?.message || "Failed to logout";
+      throw new Error(errorMessage);
     } else {
-      throw new Error("Registration failed");
+      throw new Error("Failed to logout");
     }
   }
 }
@@ -131,9 +147,11 @@ export async function getAllUsersAPI() {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message || "Failed to get profiles";
+      throw new Error(errorMessage);
     } else {
-      throw new Error("Registration failed");
+      throw new Error("Failed to get profiles");
     }
   }
 }
@@ -144,9 +162,11 @@ export async function deleteMeAPI() {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data);
+      const errorMessage =
+        err.response?.data?.message || "Failed to delete profile";
+      throw new Error(errorMessage);
     } else {
-      throw new Error("Registration failed");
+      throw new Error("Failed to delete profile");
     }
   }
 }
@@ -157,7 +177,9 @@ export async function deleteUserAPI(userId: string) {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data?.message);
+      const errorMessage =
+        err.response?.data?.message || "Failed to delete user";
+      throw new Error(errorMessage);
     } else {
       throw new Error("Failed to delete user");
     }
@@ -170,9 +192,11 @@ export async function changeThemeAPI(data: ChangeThemeData) {
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      throw new Error(err.response?.data?.message);
+      const errorMessage =
+        err.response?.data?.message || "Failed to change theme";
+      throw new Error(errorMessage);
     } else {
-      throw new Error("Failed to delete user");
+      throw new Error("Failed to change theme");
     }
   }
 }

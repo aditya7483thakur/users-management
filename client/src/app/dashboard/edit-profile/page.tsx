@@ -12,6 +12,7 @@ import {
 } from "@/services/auth";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import PasswordInput from "@/components/PasswordInput";
 
 type State = {
   name: string;
@@ -236,72 +237,46 @@ export default function ProfilePage() {
         isOpen={state.isModalOpen}
         onClose={() => dispatch({ type: "SET_MODAL_OPEN", payload: false })}
       >
-        <h2 className="text-xl font-semibold mb-4">Change Password</h2>
+        <h2 className="text-xl font-semibold mb-4 space-y-2">
+          Change Password
+        </h2>
 
         <div className="flex flex-col gap-3">
-          {/* Old Password */}
-          <div className="relative">
-            <input
-              type={state.showOldPassword ? "text" : "password"}
-              placeholder="Old Password"
-              value={state.oldPassword}
-              onChange={(e) =>
-                dispatch({ type: "SET_OLD_PASSWORD", payload: e.target.value })
-              }
-              className="w-full px-3 py-2 border rounded-lg"
-            />
-            <span
-              className="absolute right-3 top-2.5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => dispatch({ type: "TOGGLE_SHOW_OLD_PASSWORD" })}
-            >
-              {state.showOldPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </span>
-          </div>
+          <PasswordInput
+            label="Old Password"
+            value={state.oldPassword}
+            onChange={(e) =>
+              dispatch({ type: "SET_OLD_PASSWORD", payload: e.target.value })
+            }
+            placeholder="Old Password"
+            required
+            name="oldPassword"
+          />
 
-          {/* New Password */}
-          <div className="relative">
-            <input
-              type={state.showNewPassword ? "text" : "password"}
-              placeholder="New Password"
-              value={state.newPassword}
-              onChange={(e) =>
-                dispatch({ type: "SET_NEW_PASSWORD", payload: e.target.value })
-              }
-              className="w-full px-3 py-2 border rounded-lg"
-            />
-            <span
-              className="absolute right-3 top-2.5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => dispatch({ type: "TOGGLE_SHOW_NEW_PASSWORD" })}
-            >
-              {state.showNewPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </span>
-          </div>
+          <PasswordInput
+            label="New Password"
+            value={state.newPassword}
+            onChange={(e) =>
+              dispatch({ type: "SET_NEW_PASSWORD", payload: e.target.value })
+            }
+            placeholder="New Password"
+            required
+            name="newPassword"
+          />
 
-          {/* Confirm Password */}
-          <div className="relative">
-            <input
-              type={state.showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm New Password"
-              value={state.confirmPassword}
-              onChange={(e) =>
-                dispatch({
-                  type: "SET_CONFIRM_PASSWORD",
-                  payload: e.target.value,
-                })
-              }
-              className="w-full px-3 py-2 border rounded-lg"
-            />
-            <span
-              className="absolute right-3 top-2.5 cursor-pointer text-gray-500 hover:text-gray-700"
-              onClick={() => dispatch({ type: "TOGGLE_SHOW_CONFIRM_PASSWORD" })}
-            >
-              {state.showConfirmPassword ? (
-                <EyeOff size={20} />
-              ) : (
-                <Eye size={20} />
-              )}
-            </span>
-          </div>
+          <PasswordInput
+            label="Confirm New Password"
+            value={state.confirmPassword}
+            onChange={(e) =>
+              dispatch({
+                type: "SET_CONFIRM_PASSWORD",
+                payload: e.target.value,
+              })
+            }
+            placeholder="Confirm New Password"
+            required
+            name="confirmNewPassword"
+          />
         </div>
 
         <div className="flex justify-end mt-4 gap-2">
