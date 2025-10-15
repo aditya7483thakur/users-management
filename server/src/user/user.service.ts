@@ -35,7 +35,6 @@ export class UserService {
       isVerified: false,
     });
 
-    console.log(2);
     // Generate verification token
     const token = uuidv4();
     await this.tokenModel.create({
@@ -45,7 +44,6 @@ export class UserService {
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
     });
     const verificationLink = `http://localhost:3000/set-password?token=${token}`;
-    console.log(process.env.BREVO_API_KEY);
     await sendEmail(
       user.email,
       'Complete Your Registration - Set Your Password',
@@ -94,7 +92,6 @@ export class UserService {
   async logout(userId: string, currentToken: string) {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
-    console.log(currentToken);
     // Remove the current token from the jwt array
     user.jwt = user.jwt.filter((token) => token !== currentToken);
 
