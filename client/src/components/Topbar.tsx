@@ -1,7 +1,7 @@
 "use client";
 
 import { logoutAPI } from "@/services/auth";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -10,10 +10,12 @@ import { useThemeStore } from "@/providers/store";
 export default function Topbar() {
   const router = useRouter();
   const { name } = useThemeStore();
+  const queryClient = useQueryClient();
 
   const { isPending, mutate } = useMutation({
     mutationFn: logoutAPI,
     onSuccess: (data) => {
+      queryClient.clear();
       localStorage.removeItem("token");
       toast.success(data.message);
       router.push("/login");
