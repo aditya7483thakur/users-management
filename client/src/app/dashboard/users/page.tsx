@@ -85,6 +85,10 @@ export default function Page() {
     );
   }
 
+  {
+    console.log(getAllUsersMutate.data);
+  }
+
   return (
     <section className="p-6 space-y-6" style={modalStyles}>
       <h2 className="text-3xl font-semibold mb-4 tracking-tight">Users</h2>
@@ -104,22 +108,30 @@ export default function Page() {
             </tr>
           </thead>
           <tbody>
-            {!getAllUsersMutate?.data || getAllUsersMutate.data.length === 0 ? (
-              <tr>
-                <td colSpan={2} className="text-center py-6 opacity-70 text-sm">
-                  No users found
-                </td>
-              </tr>
-            ) : (
-              getAllUsersMutate?.data
-                ?.filter(
-                  (user: { _id: string; email: string }) =>
-                    user.email !== currentEmail
-                )
-                .map((user: { _id: string; email: string }) => (
+            {(() => {
+              const visibleUsers = getAllUsersMutate?.data?.filter(
+                (user: { _id: string; email: string }) =>
+                  user.email !== currentEmail
+              );
+
+              if (!visibleUsers || visibleUsers.length === 0) {
+                return (
+                  <tr>
+                    <td
+                      colSpan={2}
+                      className="text-center py-6 opacity-70 text-sm"
+                    >
+                      No users found
+                    </td>
+                  </tr>
+                );
+              }
+
+              return visibleUsers.map(
+                (user: { _id: string; email: string }) => (
                   <tr
                     key={user._id}
-                    className={`transition-colors hover:bg-[color-mix(in_srgb,var(--bg)_85%,var(--text)_10%)]`}
+                    className="transition-colors hover:bg-[color-mix(in_srgb,var(--bg)_85%,var(--text)_10%)]"
                   >
                     <td className="py-4 px-6 flex items-center gap-2">
                       <Mail size={16} className="opacity-70" />
@@ -139,8 +151,9 @@ export default function Page() {
                       </button>
                     </td>
                   </tr>
-                ))
-            )}
+                )
+              );
+            })()}
           </tbody>
         </table>
       </div>
