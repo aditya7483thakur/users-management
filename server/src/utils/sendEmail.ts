@@ -5,7 +5,6 @@ export async function sendEmail(
   subject: string,
   htmlContent: string,
 ) {
-  console.log(process.env.BREVO_API_KEY);
   const defaultClient = SibApiV3Sdk.ApiClient.instance;
   defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
 

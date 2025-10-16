@@ -1,5 +1,6 @@
 import axios from "axios";
 import {
+  ApiResponse,
   ChangePasswordData,
   ChangeThemeData,
   ForgotPasswordData,
@@ -199,4 +200,45 @@ export async function changeThemeAPI(data: ChangeThemeData) {
       throw new Error("Failed to change theme");
     }
   }
+}
+
+// -------------------------
+// Wrapper function (infra retry example)
+// -------------------------
+// Generic async GET request wrapper
+
+export async function wrapperFunction<T>(
+  reqFn: () => Promise<ApiResponse<T>>,
+  attempts = 3,
+  wait = 1000
+): Promise<T> {
+  let lastError: unknown = null;
+
+  for (let i = 1; i <= attempts; i++) {
+    try {
+      const res = await reqFn();
+
+      if (res.ok && res.data !== null) {
+        console.log(`✅ Success on attempt ${i}`);
+        return res.data;
+      }
+
+      lastError = res.error || "No data";
+      console.warn(`❌ Attempt ${i} failed: ${lastError}`);
+    } catch (err) {
+      lastError = err;
+      console.warn(`❌ Attempt ${i} threw error: ${(err as Error).message}`);
+    }
+
+    if (i < attempts) {
+      delay(wait);
+    }
+  }
+
+  throw new Error(JSON.stringify(lastError));
+}
+
+// Utility delay function
+async function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, Math.min(ms, 10000)));
 }

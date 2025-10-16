@@ -32,3 +32,17 @@ export interface ChangePasswordData {
 export interface ChangeThemeData {
   theme: string;
 }
+
+// types/api.ts
+export interface ApiResponse<T> {
+  ok: boolean;
+  data: T | null; // null means "no data"
+  message: string;
+  error?: string;
+}
+
+export interface User {
+  _id: string;
+  name: string;
+  email: string;
+}

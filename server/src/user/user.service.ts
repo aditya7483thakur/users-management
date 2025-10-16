@@ -65,7 +65,7 @@ export class UserService {
         <p>This link will expire in 24 hours.</p>
       `,
     );
-    return { message: 'Verification email sent', token };
+    return { message: 'Verification email sent', token, ok: true };
   }
 
   // -------------------------
@@ -86,7 +86,7 @@ export class UserService {
 
     user.jwt.push(jti);
     await user.save();
-    return { message: 'Login successful!', token: jwt };
+    return { message: 'Login successful!', token: jwt, ok: true };
   }
 
   async logout(userId: string, currentToken: string) {
@@ -97,7 +97,7 @@ export class UserService {
 
     await user.save();
 
-    return { message: 'Logged out successfully' };
+    return { message: 'Logged out successfully', ok: true };
   }
 
   // -------------------------
@@ -139,7 +139,7 @@ export class UserService {
   `,
     );
 
-    return { message: 'Password reset email sent', token };
+    return { message: 'Password reset email sent', token, ok: true };
   }
 
   // -------------------------
@@ -172,7 +172,7 @@ export class UserService {
     await user.save();
     await record.deleteOne();
 
-    return { message: 'Password set successfully' };
+    return { message: 'Password set successfully', ok: true };
   }
 
   // change password for logged-in users
@@ -201,7 +201,7 @@ export class UserService {
 
     await user.save();
 
-    return { message: 'Password changed successfully' };
+    return { message: 'Password changed successfully', ok: true };
   }
 
   // -------------------------
@@ -223,14 +223,26 @@ export class UserService {
       .findByIdAndUpdate(userId, dto, { new: true })
       .select('-passwordHash -jwt');
     if (!user) throw new NotFoundException('User not found');
-    return { message: 'User updated successfully', user };
+    return { message: 'User updated successfully', user, ok: true };
   }
 
   // -------------------------
   // 7️⃣ Get all users
   // -------------------------
   async getAllUsers() {
-    return this.userModel.find().select('-passwordHash -jwt');
+    const chance = Math.random();
+
+    const users =
+      chance < 0.5
+        ? []
+        : await this.userModel.find().select('-passwordHash -jwt');
+
+    return {
+      ok: true,
+      data: users.length > 0 ? users : null,
+      message:
+        users.length > 0 ? 'Users fetched successfully' : 'No users found',
+    };
   }
 
   // -------------------------
@@ -239,7 +251,7 @@ export class UserService {
   async deleteUser(userId: string) {
     const user = await this.userModel.findByIdAndDelete(userId);
     if (!user) throw new NotFoundException('User not found');
-    return { message: 'User deleted successfully' };
+    return { message: 'User deleted successfully', ok: true };
   }
 
   // -------------------------

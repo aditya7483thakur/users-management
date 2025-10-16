@@ -4,9 +4,15 @@ import { useState } from "react";
 import { Trash2, Mail, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { deleteUserAPI, getAllUsersAPI } from "@/services/auth";
+import {
+  deleteUserAPI,
+  getAllUsersAPI,
+  wrapperFunction,
+} from "@/services/auth";
 import { useThemeStore } from "@/providers/store";
 import Modal from "@/components/Modal";
+import { get } from "http";
+import { User } from "@/types/auth";
 
 const modalStyles = {
   backgroundColor: "var(--bg)",
@@ -20,10 +26,11 @@ export default function Page() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // Fetch all users
-  const getAllUsersMutate = useQuery({
+  const getAllUsersMutate = useQuery<User[] | null>({
     queryKey: ["allUsers"],
-    queryFn: getAllUsersAPI,
+    queryFn: () => wrapperFunction(getAllUsersAPI, 10, 500),
     refetchInterval: 1000 * 60 * 5, // every 5 mins
+    retry: 0,
   });
 
   // Delete user by ID
@@ -68,6 +75,16 @@ export default function Page() {
     );
   }
 
+  if (getAllUsersMutate.isError) {
+    return (
+      <section className="flex flex-col items-center justify-center h-[70vh]">
+        <p className="text-red-600 font-bold text-2xl animate-pulse">
+          An error occured !
+        </p>
+      </section>
+    );
+  }
+
   return (
     <section className="p-6 space-y-6" style={modalStyles}>
       <h2 className="text-3xl font-semibold mb-4 tracking-tight">Users</h2>
@@ -87,7 +104,7 @@ export default function Page() {
             </tr>
           </thead>
           <tbody>
-            {getAllUsersMutate?.data?.length === 0 ? (
+            {!getAllUsersMutate?.data || getAllUsersMutate.data.length === 0 ? (
               <tr>
                 <td colSpan={2} className="text-center py-6 opacity-70 text-sm">
                   No users found
