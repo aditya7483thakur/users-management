@@ -76,8 +76,11 @@ export class UserService {
     if (!user || !user.isVerified)
       throw new UnauthorizedException('Invalid credentials');
 
-    const valid = await bcrypt.compare(password, user.passwordHash);
+    const decodedPassword = Buffer.from(password, 'base64').toString('utf-8');
+
+    const valid = await bcrypt.compare(decodedPassword, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
+
     const jti = uuidv4();
     const jwt = this.jwtService.sign({
       sub: user._id.toString(),
@@ -86,6 +89,7 @@ export class UserService {
 
     user.jwt.push(jti);
     await user.save();
+
     return { message: 'Login successful!', token: jwt, ok: true };
   }
 
@@ -146,7 +150,13 @@ export class UserService {
   // 4️⃣ Unified setPassword → handles first-time verification & password reset
   // -------------------------
   async setPassword(token: string, password: string, confirmPassword: string) {
-    if (password !== confirmPassword) {
+    const decodedPassword = Buffer.from(password, 'base64').toString('utf-8');
+    const decodedConfirmPassword = Buffer.from(
+      confirmPassword,
+      'base64',
+    ).toString('utf-8');
+
+    if (decodedPassword !== decodedConfirmPassword) {
       throw new BadRequestException("Passwords don't match");
     }
 
@@ -161,7 +171,7 @@ export class UserService {
     if (!user) throw new NotFoundException('User not found');
 
     // Hash and set the password
-    const hash = await bcrypt.hash(password, 10);
+    const hash = await bcrypt.hash(decodedPassword, 10);
     user.passwordHash = hash;
 
     // If first-time registration, mark as verified
@@ -183,18 +193,32 @@ export class UserService {
     confirmPassword: string,
     currentToken: string,
   ) {
-    if (newPassword !== confirmPassword) {
+    // 🔹 Decode all Base64 passwords
+    const decodedOldPassword = Buffer.from(oldPassword, 'base64').toString(
+      'utf-8',
+    );
+    const decodedNewPassword = Buffer.from(newPassword, 'base64').toString(
+      'utf-8',
+    );
+    const decodedConfirmPassword = Buffer.from(
+      confirmPassword,
+      'base64',
+    ).toString('utf-8');
+
+    // Check new password match
+    if (decodedNewPassword !== decodedConfirmPassword) {
       throw new BadRequestException("Passwords don't match");
     }
+
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
     // Verify old password
-    const isValid = await bcrypt.compare(oldPassword, user.passwordHash);
+    const isValid = await bcrypt.compare(decodedOldPassword, user.passwordHash);
     if (!isValid) throw new BadRequestException('Old password is incorrect');
 
     // Hash and set the new password
-    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.passwordHash = await bcrypt.hash(decodedNewPassword, 10);
 
     // Keep only the current JWT, log out all other sessions
     user.jwt = [currentToken];

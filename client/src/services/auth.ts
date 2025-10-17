@@ -31,7 +31,12 @@ export async function registerUserAPI(data: RegisterData) {
 // Login user
 export async function loginUserAPI(data: LoginData) {
   try {
-    const res = await axiosInstance.post("/auth/login", data);
+    const encodedPassword = btoa(data.password);
+    const res = await axiosInstance.post("/auth/login", {
+      ...data,
+      password: encodedPassword,
+    });
+
     const responseData = res.data;
     if (responseData.token) {
       localStorage.setItem("token", responseData.token);
@@ -67,7 +72,13 @@ export async function forgotPasswordAPI(data: ForgotPasswordData) {
 // Set Password
 export async function setPasswordAPI(data: SetPasswordData) {
   try {
-    const res = await axiosInstance.post("/user/set-password", data);
+    const encodedPassword = btoa(data.password);
+    const encodedConfirmPassword = btoa(data.confirmPassword);
+    const res = await axiosInstance.post("/user/set-password", {
+      ...data,
+      password: encodedPassword,
+      confirmPassword: encodedConfirmPassword,
+    });
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -115,7 +126,14 @@ export async function updateProfileAPI(data: UpdateProfileData) {
 // update password
 export async function updatePasswordAPI(data: ChangePasswordData) {
   try {
-    const res = await axiosInstance.patch("/user/update-password", data);
+    const encodedData = {
+      ...data,
+      oldPassword: btoa(data.oldPassword),
+      newPassword: btoa(data.newPassword),
+      confirmPassword: btoa(data.confirmPassword),
+    };
+
+    const res = await axiosInstance.patch("/user/update-password", encodedData);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -128,6 +146,7 @@ export async function updatePasswordAPI(data: ChangePasswordData) {
   }
 }
 
+// logout
 export async function logoutAPI() {
   try {
     const res = await axiosInstance.patch("/auth/logout");
@@ -142,6 +161,7 @@ export async function logoutAPI() {
   }
 }
 
+// get all users
 export async function getAllUsersAPI() {
   try {
     const res = await axiosInstance.get("/user");
@@ -157,6 +177,7 @@ export async function getAllUsersAPI() {
   }
 }
 
+// delete my account
 export async function deleteMeAPI() {
   try {
     const res = await axiosInstance.delete("/user/me");
@@ -172,6 +193,7 @@ export async function deleteMeAPI() {
   }
 }
 
+//delete someone else account
 export async function deleteUserAPI(userId: string) {
   try {
     const res = await axiosInstance.delete(`/user/${userId}`);
@@ -187,6 +209,7 @@ export async function deleteUserAPI(userId: string) {
   }
 }
 
+// change theme
 export async function changeThemeAPI(data: ChangeThemeData) {
   try {
     const res = await axiosInstance.patch("/theme/change", data);
