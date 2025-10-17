@@ -61,7 +61,7 @@ export default function SetPasswordContent() {
 
           <button
             type="submit"
-            className={`w-full bg-blue-600 text-white py-2 rounded-lg transition ${
+            className={`w-full bg-blue-600 text-white py-2 hover:cursor-pointer rounded-lg transition ${
               isPending ? "opacity-70 cursor-not-allowed" : "hover:bg-blue-700"
             }`}
             disabled={isPending}

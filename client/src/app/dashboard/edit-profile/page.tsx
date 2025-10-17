@@ -207,7 +207,7 @@ export default function ProfilePage() {
       {/* Buttons */}
       <button
         onClick={handleSaveChanges}
-        className="w-full py-2 rounded-lg mb-4 transition-colors"
+        className="w-full py-2 rounded-lg mb-4 transition-colors hover:cursor-pointer"
         style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}
       >
         Save Changes
@@ -215,7 +215,7 @@ export default function ProfilePage() {
 
       <button
         onClick={() => dispatch({ type: "SET_MODAL_OPEN", payload: true })}
-        className="w-full py-2 rounded-lg mb-4 transition-colors"
+        className="w-full py-2 rounded-lg mb-4 transition-colors hover:cursor-pointer"
         style={{
           backgroundColor: "var(--bg)",
           color: "var(--text)",
@@ -227,7 +227,7 @@ export default function ProfilePage() {
 
       <button
         onClick={handleDeleteAccount}
-        className="w-full py-2 rounded-lg transition-colors"
+        className="w-full py-2 rounded-lg transition-colors hover:cursor-pointer"
         style={{ backgroundColor: "#b91c1c", color: "#fee2e2" }}
       >
         Delete Account
@@ -283,14 +283,14 @@ export default function ProfilePage() {
         <div className="flex justify-end mt-4 gap-2">
           <button
             onClick={() => dispatch({ type: "SET_MODAL_OPEN", payload: false })}
-            className="px-4 py-2 rounded-lg"
+            className="px-4 py-2 rounded-lg hover:cursor-pointer"
             style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}
           >
             Cancel
           </button>
           <button
             onClick={handleChangePasswordSubmit}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:cursor-pointer"
           >
             Submit
           </button>

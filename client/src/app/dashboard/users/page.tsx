@@ -140,7 +140,7 @@ export default function Page() {
                     <td className="text-right py-4 px-6">
                       <button
                         onClick={() => openDeleteModal(user._id)}
-                        className="inline-flex items-center gap-2 text-sm font-medium border px-3 py-1.5 rounded-xl transition-all duration-200 hover:scale-[1.05]"
+                        className="inline-flex items-center gap-2 text-sm font-medium border hover:cursor-pointer px-3 py-1.5 rounded-xl transition-all duration-200 hover:scale-[1.05]"
                         style={{
                           borderColor: "var(--primary,#2679f3)",
                           color: "var(--primary,#2679f3)",
@@ -166,14 +166,14 @@ export default function Page() {
         <div className="flex justify-end gap-3">
           <button
             onClick={cancelDelete}
-            className="px-4 py-2 rounded-lg border border-gray-400 hover:bg-gray-100"
+            className="px-4 py-2 rounded-lg border border-gray-400 hover:cursor-pointer hover:bg-gray-100"
           >
             Cancel
           </button>
           <button
             onClick={confirmDelete}
             disabled={deleteUserMutate.isPending}
-            className={`px-4 py-2 rounded-lg text-white transition-all ${
+            className={`px-4 py-2 rounded-lg hover:cursor-pointer text-white transition-all ${
               deleteUserMutate.isPending
                 ? "bg-red-400 cursor-not-allowed"
                 : "bg-red-600 hover:bg-red-700"

@@ -26,7 +26,7 @@ export default function ThemeBoxes() {
           key={t}
           onClick={() => mutate({ theme: t })}
           disabled={isPending}
-          className={`w-48 h-48 rounded-lg border hover:opacity-80 transition-colors ${
+          className={`w-48 h-48 rounded-lg border hover:cursor-pointer hover:opacity-80 transition-colors ${
             t === "light"
               ? "bg-white text-black"
               : t === "dark"

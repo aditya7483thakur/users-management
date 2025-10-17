@@ -51,7 +51,7 @@ export default function EditProfilePage() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+            className="w-full bg-blue-600 hover:cursor-pointer text-white py-2 rounded-lg hover:bg-blue-700 transition"
           >
             Save Changes
           </button>
@@ -60,14 +60,14 @@ export default function EditProfilePage() {
         <div className="mt-6 space-y-3">
           <button
             onClick={handleChangePassword}
-            className="w-full border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
+            className="w-full border border-gray-300 hover:cursor-pointer py-2 rounded-lg hover:bg-gray-100 transition"
           >
             Change Password
           </button>
 
           <button
             onClick={handleDeleteAccount}
-            className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition"
+            className="w-full bg-red-600 text-white py-2 rounded-lg hover:cursor-pointer hover:bg-red-700 transition"
           >
             Delete Account
           </button>

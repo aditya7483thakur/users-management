@@ -69,7 +69,7 @@ export default function Topbar() {
         <button
           onClick={handleLogout}
           disabled={isPending}
-          className="px-4 py-2 rounded-lg transition-colors"
+          className="px-4 hover:cursor-pointer py-2 rounded-lg transition-colors"
           style={{
             backgroundColor: "var(--text)",
             color: "var(--bg)",

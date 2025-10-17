@@ -141,7 +141,7 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => dispatch({ type: "OPEN_FORGOT_MODAL" })}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-blue-600 hover:underline hover:cursor-pointer"
             >
               Forgot password?
             </button>
@@ -150,7 +150,7 @@ export default function LoginPage() {
           {/* Login Button */}
           <button
             type="submit"
-            className={`w-full bg-blue-600 text-white py-2 rounded-lg transition ${
+            className={`w-full bg-blue-600 text-white hover:cursor-pointer py-2 rounded-lg transition ${
               loginMutate.isPending
                 ? "opacity-70 cursor-not-allowed"
                 : "hover:bg-blue-700"
@@ -187,13 +187,13 @@ export default function LoginPage() {
             <button
               type="button"
               onClick={() => dispatch({ type: "CLOSE_FORGOT_MODAL" })}
-              className="px-4 py-2 border rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition"
+              className="px-4 py-2 border hover:cursor-pointer rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition"
+              className="px-4 py-2 bg-blue-600 hover:cursor-pointer text-white rounded-lg text-sm hover:bg-blue-700 transition"
               disabled={forgotPasswordMutate.isPending}
             >
               {forgotPasswordMutate.isPending
