@@ -1,4 +1,10 @@
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class RegisterDto {
   @IsString({ message: 'Name must be a string' })
@@ -7,4 +13,11 @@ export class RegisterDto {
 
   @IsEmail({}, { message: 'Invalid email address' })
   email: string;
+
+  @IsString({ message: 'Captcha ID must be a string' })
+  @IsNotEmpty({ message: 'Captcha ID is required' })
+  captchaId: string;
+
+  @IsNumber({}, { message: 'Captcha answer must be a number' })
+  captchaAnswer: number;
 }

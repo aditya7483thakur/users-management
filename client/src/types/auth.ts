@@ -2,12 +2,16 @@
 export interface LoginData {
   email: string;
   password: string;
+  captchaId: string;
+  captchaAnswer: number;
 }
-
 export interface RegisterData {
   name: string;
   email: string;
+  captchaId: string;
+  captchaAnswer: number;
 }
+
 export interface SetPasswordData {
   token: string;
   password: string;

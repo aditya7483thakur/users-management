@@ -97,14 +97,4 @@ export class UserController {
     const captcha = await this.userService.generateCaptcha();
     return captcha; // { captchaId, num1, num2, operation }
   }
-
-  // 🔹 POST /captcha/verify → verify captcha
-  @Post('verify')
-  async verifyCaptcha(
-    @Body('captchaId') captchaId: string,
-    @Body('captchaAnswer') captchaAnswer: number,
-  ) {
-    await this.userService.verifyCaptcha(captchaId, captchaAnswer);
-    return { message: 'Captcha verified successfully', ok: true };
-  }
 }

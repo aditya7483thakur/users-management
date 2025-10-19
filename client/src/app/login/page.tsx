@@ -1,8 +1,12 @@
 "use client";
 
 import { useReducer } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { forgotPasswordAPI, loginUserAPI } from "@/services/auth";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  forgotPasswordAPI,
+  generateCaptchaAPI,
+  loginUserAPI,
+} from "@/services/auth";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
@@ -12,12 +16,14 @@ type State = {
   email: string;
   password: string;
   isForgotModalOpen: boolean;
+  captchaAnswer: string;
   forgotEmail: string;
 };
 
 type Action =
   | { type: "SET_EMAIL"; payload: string }
   | { type: "SET_PASSWORD"; payload: string }
+  | { type: "SET_CAPTCHA_ANSWER"; payload: string }
   | { type: "OPEN_FORGOT_MODAL" }
   | { type: "CLOSE_FORGOT_MODAL" }
   | { type: "SET_FORGOT_EMAIL"; payload: string }
@@ -28,6 +34,7 @@ const initialState: State = {
   email: "",
   password: "",
   isForgotModalOpen: false,
+  captchaAnswer: "",
   forgotEmail: "",
 };
 
@@ -37,6 +44,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, email: action.payload };
     case "SET_PASSWORD":
       return { ...state, password: action.payload };
+    case "SET_CAPTCHA_ANSWER":
+      return { ...state, captchaAnswer: action.payload };
     case "OPEN_FORGOT_MODAL":
       return { ...state, isForgotModalOpen: true };
     case "CLOSE_FORGOT_MODAL":
@@ -56,6 +65,15 @@ export default function LoginPage() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
 
+  const {
+    data: captcha,
+    refetch: reloadCaptcha,
+    isLoading: captchaLoading,
+  } = useQuery({
+    queryKey: ["captcha"],
+    queryFn: generateCaptchaAPI,
+  });
+
   const loginMutate = useMutation({
     mutationFn: loginUserAPI,
     onSuccess: (data) => {
@@ -64,8 +82,8 @@ export default function LoginPage() {
       router.push("/dashboard");
     },
     onError: (err: Error) => {
-      console.log("console", err);
       toast.error(err.message);
+      reloadCaptcha();
     },
   });
 
@@ -77,14 +95,19 @@ export default function LoginPage() {
       dispatch({ type: "CLOSE_FORGOT_MODAL" });
     },
     onError: (err: Error) => {
-      console.log("console", err);
       toast.error(err.message);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutate.mutate({ email: state.email, password: state.password });
+    if (!captcha?.captchaId) return toast.error("Captcha not loaded");
+    loginMutate.mutate({
+      email: state.email,
+      password: state.password,
+      captchaId: captcha.captchaId,
+      captchaAnswer: Number(state.captchaAnswer),
+    });
   };
 
   const handleForgotSubmit = (e: React.FormEvent) => {
@@ -134,6 +157,38 @@ export default function LoginPage() {
               required
               name="Password"
             />
+          </div>
+
+          <div>
+            {captchaLoading ? (
+              <p>Loading captcha...</p>
+            ) : (
+              <>
+                <label className="block text-sm font-medium mb-1 text-gray-700">
+                  What is {captcha.num1} {captcha.operation} {captcha.num2}?
+                </label>
+                <input
+                  type="text"
+                  value={state.captchaAnswer}
+                  onChange={(e) =>
+                    dispatch({
+                      type: "SET_CAPTCHA_ANSWER",
+                      payload: e.target.value,
+                    })
+                  }
+                  required
+                  placeholder="Enter captcha answer"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => reloadCaptcha()}
+                  className="text-sm text-blue-500 underline mt-1"
+                >
+                  Reload Captcha
+                </button>
+              </>
+            )}
           </div>
 
           {/* Forgot Password */}

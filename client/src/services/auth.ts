@@ -243,6 +243,21 @@ export async function verifyEmailAPI(token: string) {
   }
 }
 
+export async function generateCaptchaAPI() {
+  try {
+    const res = await axiosInstance.get("/auth/generate-captcha");
+    return res.data;
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to generate captcha";
+      throw new Error(errorMessage);
+    } else {
+      throw new Error("Failed to generate captcha");
+    }
+  }
+}
+
 // -------------------------
 // Wrapper function (infra retry example)
 // -------------------------

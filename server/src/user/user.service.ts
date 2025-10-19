@@ -25,7 +25,13 @@ export class UserService {
   // -------------------------
   // 1️⃣ Register user & send verification email
   // -------------------------
-  async register(name: string, email: string) {
+  async register(
+    name: string,
+    email: string,
+    captchaId: string,
+    captchaAnswer: number,
+  ) {
+    await this.verifyCaptcha(captchaId, captchaAnswer);
     const existing = await this.userModel.findOne({ email });
     if (existing) throw new BadRequestException('Email already exists');
 
@@ -71,7 +77,13 @@ export class UserService {
   // -------------------------
   // 2️⃣ Login
   // -------------------------
-  async login(email: string, password: string) {
+  async login(
+    email: string,
+    password: string,
+    captchaId: string,
+    captchaAnswer: number,
+  ) {
+    await this.verifyCaptcha(captchaId, captchaAnswer);
     const user = await this.userModel.findOne({ email });
     if (!user || !user.isVerified)
       throw new UnauthorizedException('Invalid credentials');
@@ -174,14 +186,16 @@ export class UserService {
     if (!user) throw new NotFoundException('User not found');
 
     // 🔹 Check if new password is same as old password
-    const isSameAsOld = await bcrypt.compare(
-      decodedPassword,
-      user.passwordHash,
-    );
-    if (isSameAsOld) {
-      throw new BadRequestException(
-        'New password cannot be the same as the old password',
+    if (user.passwordHash) {
+      const isSameAsOld = await bcrypt.compare(
+        decodedPassword,
+        user.passwordHash,
       );
+      if (isSameAsOld) {
+        throw new BadRequestException(
+          'New password cannot be the same as the old password',
+        );
+      }
     }
 
     // 🔹 Hash and set the new password
@@ -219,7 +233,6 @@ export class UserService {
     }
 
     // 3️⃣ Get new email stored in token’s data field
-    // Assuming you stored it in token.data.newEmail when generating token
     const newEmail = record.newEmail;
 
     if (!newEmail) {
@@ -447,7 +460,8 @@ export class UserService {
       token: captchaId,
       type: TokenType.CAPTCHA,
       answer,
-      user: null, // optional
+      user: null,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 mins expiry
     });
 
     return { captchaId, num1, num2, operation };

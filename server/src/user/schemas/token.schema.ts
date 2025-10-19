@@ -9,7 +9,6 @@ export class Token {
   @Prop({
     type: Types.ObjectId,
     ref: 'User',
-    required: true,
   })
   user: Types.ObjectId;
 

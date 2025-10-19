@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Patch,
   Post,
   Request,
@@ -18,13 +19,28 @@ export class AuthController {
   // Register user → sends email verification link
   @Post('register')
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.name, dto.email);
+    return this.authService.register(
+      dto.name,
+      dto.email,
+      dto.captchaId,
+      dto.captchaAnswer,
+    );
   }
 
   // Login
   @Post('login')
   async login(@Body() dto: LoginDto) {
-    return this.authService.login(dto.email, dto.password);
+    return this.authService.login(
+      dto.email,
+      dto.password,
+      dto.captchaId,
+      dto.captchaAnswer,
+    );
+  }
+
+  @Get('generate-captcha')
+  async getCaptcha(@Request() req) {
+    return this.authService.generateCaptcha();
   }
 
   // Logout
