@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2, Mail, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -11,7 +11,6 @@ import {
 } from "@/services/auth";
 import { useThemeStore } from "@/providers/store";
 import Modal from "@/components/Modal";
-import { get } from "http";
 import { User } from "@/types/auth";
 
 const modalStyles = {
@@ -22,14 +21,18 @@ const modalStyles = {
 
 export default function Page() {
   const { email: currentEmail } = useThemeStore();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [timer, setTimer] = useState<number>(10);
+
+  const resetTimer = () => setTimer(10);
 
   // Fetch all users
-  const getAllUsersMutate = useQuery<User[] | null>({
+  const getAllUsersQuery = useQuery<User[] | null>({
     queryKey: ["allUsers"],
     queryFn: () => wrapperFunction(getAllUsersAPI, 10, 500),
-    refetchInterval: 1000 * 60 * 5, // every 5 mins
+    refetchInterval: false,
     retry: 0,
   });
 
@@ -40,12 +43,29 @@ export default function Page() {
       toast.success(data.message);
       setIsModalOpen(false);
       setSelectedUserId(null);
-      getAllUsersMutate.refetch();
+      getAllUsersQuery.refetch();
+      resetTimer();
     },
     onError: (err: Error) => {
       toast.error(err.message);
     },
   });
+
+  useEffect(() => {
+    const interval = setInterval(
+      () =>
+        setTimer((prev) => {
+          if (prev == 1) {
+            getAllUsersQuery.refetch();
+            return 10;
+          }
+          return prev - 1;
+        }),
+      1000
+    );
+
+    return () => clearInterval(interval);
+  }, []);
 
   const openDeleteModal = (id: string) => {
     setSelectedUserId(id);
@@ -63,8 +83,13 @@ export default function Page() {
     setIsModalOpen(false);
   };
 
+  const handleManualRefresh = () => {
+    getAllUsersQuery.refetch();
+    resetTimer();
+  };
+
   // 💡 Loader UI
-  if (getAllUsersMutate.isLoading) {
+  if (getAllUsersQuery.isLoading) {
     return (
       <section className="flex flex-col items-center justify-center h-[70vh]">
         <Loader2 className="w-10 h-10 animate-spin text-blue-600 mb-3" />
@@ -75,7 +100,7 @@ export default function Page() {
     );
   }
 
-  if (getAllUsersMutate.isError) {
+  if (getAllUsersQuery.isError) {
     return (
       <section className="flex flex-col items-center justify-center h-[70vh]">
         <p className="text-red-600 font-bold text-2xl animate-pulse">
@@ -85,13 +110,21 @@ export default function Page() {
     );
   }
 
-  {
-    console.log(getAllUsersMutate.data);
-  }
-
   return (
     <section className="p-6 space-y-6" style={modalStyles}>
-      <h2 className="text-3xl font-semibold mb-4 tracking-tight">Users</h2>
+      <div className="flex justify-between mb-4 items-center">
+        <h2 className="text-3xl font-semibold tracking-tight">Users</h2>
+
+        <div className="flex items-center space-x-2">
+          <span className="font-medium">Refresh in: {timer}s</span>
+          <button
+            onClick={handleManualRefresh}
+            className="px-4 py-1 rounded-lg border border-gray-400 hover:bg-gray-100 transition"
+          >
+            Refresh
+          </button>
+        </div>
+      </div>
 
       <div
         className="overflow-x-auto rounded-2xl shadow-md border border-opacity-20"
@@ -108,36 +141,18 @@ export default function Page() {
             </tr>
           </thead>
           <tbody>
-            {(() => {
-              const visibleUsers = getAllUsersMutate?.data?.filter(
-                (user: { _id: string; email: string }) =>
-                  user.email !== currentEmail
-              );
-
-              if (!visibleUsers || visibleUsers.length === 0) {
-                return (
-                  <tr>
-                    <td
-                      colSpan={2}
-                      className="text-center py-6 opacity-70 text-sm"
-                    >
-                      No users found
-                    </td>
-                  </tr>
-                );
-              }
-
-              return visibleUsers.map(
-                (user: { _id: string; email: string }) => (
-                  <tr
-                    key={user._id}
-                    className="transition-colors hover:bg-[color-mix(in_srgb,var(--bg)_85%,var(--text)_10%)]"
-                  >
-                    <td className="py-4 px-6 flex items-center gap-2">
-                      <Mail size={16} className="opacity-70" />
-                      <span>{user.email}</span>
-                    </td>
-                    <td className="text-right py-4 px-6">
+            {getAllUsersQuery?.data?.map(
+              (user: { _id: string; email: string }) => (
+                <tr
+                  key={user._id}
+                  className="transition-colors hover:bg-[color-mix(in_srgb,var(--bg)_85%,var(--text)_10%)]"
+                >
+                  <td className="py-4 px-6 flex items-center gap-2">
+                    <Mail size={16} className="opacity-70" />
+                    <span>{user.email}</span>
+                  </td>
+                  <td className="text-right py-4 px-6">
+                    {user.email !== currentEmail && (
                       <button
                         onClick={() => openDeleteModal(user._id)}
                         className="inline-flex items-center gap-2 text-sm font-medium border hover:cursor-pointer px-3 py-1.5 rounded-xl transition-all duration-200 hover:scale-[1.05]"
@@ -149,11 +164,11 @@ export default function Page() {
                         <Trash2 size={15} />
                         Delete
                       </button>
-                    </td>
-                  </tr>
-                )
-              );
-            })()}
+                    )}
+                  </td>
+                </tr>
+              )
+            )}
           </tbody>
         </table>
       </div>

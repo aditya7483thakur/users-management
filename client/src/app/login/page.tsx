@@ -165,7 +165,10 @@ export default function LoginPage() {
       {/* Forgot Password Modal */}
       <Modal
         isOpen={state.isForgotModalOpen}
-        onClose={() => dispatch({ type: "CLOSE_FORGOT_MODAL" })}
+        onClose={() => {
+          dispatch({ type: "CLOSE_FORGOT_MODAL" });
+          dispatch({ type: "RESET_FORGOT_EMAIL" });
+        }}
       >
         <h2 className="text-lg font-semibold mb-4">Reset your password</h2>
         <form onSubmit={handleForgotSubmit} className="space-y-4">
@@ -186,7 +189,10 @@ export default function LoginPage() {
           <div className="flex justify-end gap-3">
             <button
               type="button"
-              onClick={() => dispatch({ type: "CLOSE_FORGOT_MODAL" })}
+              onClick={() => {
+                dispatch({ type: "CLOSE_FORGOT_MODAL" });
+                dispatch({ type: "RESET_FORGOT_EMAIL" });
+              }}
               className="px-4 py-2 border hover:cursor-pointer rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition"
             >
               Cancel

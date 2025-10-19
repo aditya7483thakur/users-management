@@ -43,7 +43,7 @@ export class UserService {
       type: TokenType.EMAIL_VERIFICATION,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
     });
-    const verificationLink = `http://localhost:3000/set-password?token=${token}`;
+    const verificationLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
     await sendEmail(
       user.email,
       'Complete Your Registration - Set Your Password',
@@ -119,7 +119,7 @@ export class UserService {
       expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1h expiry
     });
 
-    const resetLink = `http://localhost:3000/set-password?token=${token}`;
+    const resetLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
 
     await sendEmail(
       user.email,
@@ -150,39 +150,96 @@ export class UserService {
   // 4️⃣ Unified setPassword → handles first-time verification & password reset
   // -------------------------
   async setPassword(token: string, password: string, confirmPassword: string) {
+    // 🔹 Decode Base64 passwords
     const decodedPassword = Buffer.from(password, 'base64').toString('utf-8');
     const decodedConfirmPassword = Buffer.from(
       confirmPassword,
       'base64',
     ).toString('utf-8');
 
+    // 🔹 Check if passwords match
     if (decodedPassword !== decodedConfirmPassword) {
       throw new BadRequestException("Passwords don't match");
     }
 
-    // Find the token (either EMAIL_VERIFICATION or PASSWORD_RESET)
+    // 🔹 Find the token (EMAIL_VERIFICATION or PASSWORD_RESET)
     const record = await this.tokenModel.findOne({
       token,
       type: { $in: [TokenType.EMAIL_VERIFICATION, TokenType.PASSWORD_RESET] },
     });
     if (!record) throw new BadRequestException('Invalid or expired token');
 
+    // 🔹 Find the user
     const user = await this.userModel.findById(record.user);
     if (!user) throw new NotFoundException('User not found');
 
-    // Hash and set the password
-    const hash = await bcrypt.hash(decodedPassword, 10);
-    user.passwordHash = hash;
+    // 🔹 Check if new password is same as old password
+    const isSameAsOld = await bcrypt.compare(
+      decodedPassword,
+      user.passwordHash,
+    );
+    if (isSameAsOld) {
+      throw new BadRequestException(
+        'New password cannot be the same as the old password',
+      );
+    }
 
-    // If first-time registration, mark as verified
+    // 🔹 Hash and set the new password
+    user.passwordHash = await bcrypt.hash(decodedPassword, 10);
+
+    // 🔹 If first-time registration, mark as verified
     if (record.type === TokenType.EMAIL_VERIFICATION) {
       user.isVerified = true;
     }
+
+    // 🔹 Log out all sessions
+    user.jwt = [];
 
     await user.save();
     await record.deleteOne();
 
     return { message: 'Password set successfully', ok: true };
+  }
+
+  async verifyEmailUpdate(token: string) {
+    // 1️⃣ Find the token and ensure it's for EMAIL_UPDATE
+    const record = await this.tokenModel.findOne({
+      token,
+      type: TokenType.EMAIL_UPDATE,
+    });
+
+    if (!record) {
+      throw new BadRequestException('Invalid or expired token');
+    }
+
+    // 2️⃣ Find the associated user
+    const user = await this.userModel.findById(record.user);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // 3️⃣ Get new email stored in token’s data field
+    // Assuming you stored it in token.data.newEmail when generating token
+    const newEmail = record.newEmail;
+
+    if (!newEmail) {
+      throw new BadRequestException('Token does not contain a valid new email');
+    }
+
+    // 4️⃣ Double-check no other user already has this email
+    const existing = await this.userModel.findOne({ email: newEmail });
+    if (existing) {
+      throw new BadRequestException('Email already in use');
+    }
+
+    // 5️⃣ Update the user's email
+    user.email = newEmail;
+    await user.save();
+
+    // 6️⃣ Delete token after successful verification
+    await record.deleteOne();
+
+    return { message: 'Email updated successfully', ok: true };
   }
 
   // change password for logged-in users
@@ -208,6 +265,13 @@ export class UserService {
     // Check new password match
     if (decodedNewPassword !== decodedConfirmPassword) {
       throw new BadRequestException("Passwords don't match");
+    }
+
+    // Ensure new password is not same as old password
+    if (decodedNewPassword === decodedOldPassword) {
+      throw new BadRequestException(
+        'New password cannot be the same as the old password',
+      );
     }
 
     const user = await this.userModel.findById(userId);
@@ -243,11 +307,91 @@ export class UserService {
   // 6️⃣ Update user profile
   // -------------------------
   async updateUser(userId: string, dto: UpdateUserDto) {
-    const user = await this.userModel
-      .findByIdAndUpdate(userId, dto, { new: true })
-      .select('-passwordHash -jwt');
+    // 🧩 Guard: empty body → no update
+    if (!dto.name && !dto.email) {
+      return { message: 'No changes detected', ok: true };
+    }
+
+    const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
-    return { message: 'User updated successfully', user, ok: true };
+
+    let nameChanged = false;
+    let emailVerificationTriggered = false;
+
+    // ---------- HANDLE NAME ----------
+    if (dto.name && dto.name !== user.name) {
+      user.name = dto.name;
+      nameChanged = true;
+    }
+
+    // ---------- HANDLE EMAIL ----------
+    if (dto.email && dto.email !== user.email) {
+      // Check if new email already exists
+      const existing = await this.userModel.findOne({ email: dto.email });
+      if (existing) throw new BadRequestException('Email already in use');
+
+      const token = uuidv4();
+      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+
+      await this.tokenModel.create({
+        user: user._id,
+        token,
+        type: TokenType.EMAIL_UPDATE,
+        newEmail: dto.email,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1h expiry
+      });
+
+      await sendEmail(
+        dto.email,
+        'Confirm your new email',
+        `
+        <p>You requested to change your email. Click below to confirm this address:</p>
+        <a href="${verificationUrl}" 
+           style="
+             display:inline-block;
+             padding:10px 20px;
+             font-size:16px;
+             color:white;
+             background-color:#2679f3;
+             text-decoration:none;
+             border-radius:5px;
+           ">
+           Confirm Email
+        </a>
+        <p>This link will expire in 1 hour.</p>
+        <p>If you did not request this change, ignore this email.</p>
+        <p>After confirmation, log in next time with your new email.</p>
+      `,
+      );
+
+      emailVerificationTriggered = true;
+    }
+
+    // ---------- SAVE IF NEEDED ----------
+    if (nameChanged) await user.save();
+
+    // ---------- RESPONSE LOGIC ----------
+    if (!nameChanged && !emailVerificationTriggered) {
+      return { message: 'No changes detected', ok: true };
+    }
+
+    if (nameChanged && emailVerificationTriggered) {
+      return {
+        message: 'Name updated. Verification email sent to the new address.',
+        ok: true,
+        user,
+      };
+    }
+
+    if (nameChanged) {
+      return { message: 'Name updated successfully', ok: true, user };
+    }
+
+    return {
+      message: 'Verification email sent to the new address',
+      ok: true,
+      user,
+    };
   }
 
   // -------------------------
@@ -287,5 +431,44 @@ export class UserService {
       .select('-passwordHash');
     if (!user) throw new NotFoundException('User not found');
     return user;
+  }
+
+  //GENERATE CAPTCHA
+  async generateCaptcha() {
+    const num1 = Math.floor(Math.random() * 10) + 1; // 1-10
+    const num2 = Math.floor(Math.random() * 10) + 1; // 1-10
+    const operation = '+'; // For simplicity, only addition
+
+    const answer = num1 + num2;
+    const captchaId = uuidv4();
+
+    // Save captcha in token collection
+    await this.tokenModel.create({
+      token: captchaId,
+      type: TokenType.CAPTCHA,
+      answer,
+      user: null, // optional
+    });
+
+    return { captchaId, num1, num2, operation };
+  }
+
+  // Verify captcha
+  async verifyCaptcha(captchaId: string, captchaAnswer: number) {
+    const record = await this.tokenModel.findOne({
+      token: captchaId,
+      type: TokenType.CAPTCHA,
+    });
+
+    if (!record) throw new BadRequestException('Invalid or expired captcha');
+
+    if (record.answer !== captchaAnswer) {
+      throw new BadRequestException('Captcha answer is incorrect');
+    }
+
+    // Delete captcha after verification to prevent reuse
+    await record.deleteOne();
+
+    return true;
   }
 }

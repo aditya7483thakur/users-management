@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { setPasswordAPI } from "@/services/auth";
@@ -9,6 +9,7 @@ import PasswordInput from "@/components/PasswordInput";
 export default function SetPasswordContent() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
@@ -19,6 +20,7 @@ export default function SetPasswordContent() {
       toast.success(data.message);
       setPassword("");
       setConfirmPassword("");
+      router.push("/login");
     },
     onError: (err: Error) => {
       toast.error(err.message);

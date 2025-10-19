@@ -1,6 +1,8 @@
 export enum TokenType {
   EMAIL_VERIFICATION = 'EMAIL_VERIFICATION',
   PASSWORD_RESET = 'PASSWORD_RESET',
+  EMAIL_UPDATE = 'EMAIL_UPDATE',
+  CAPTCHA = 'CAPTCHA',
 }
 
 export enum Theme {

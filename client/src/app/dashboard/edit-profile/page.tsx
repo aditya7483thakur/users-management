@@ -13,18 +13,6 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import PasswordInput from "@/components/PasswordInput";
 
-type State = {
-  name: string;
-  email: string;
-  oldPassword: string;
-  newPassword: string;
-  confirmPassword: string;
-  isModalOpen: boolean;
-  showOldPassword: boolean;
-  showNewPassword: boolean;
-  showConfirmPassword: boolean;
-};
-
 type Action =
   | { type: "SET_NAME"; payload: string }
   | { type: "SET_EMAIL"; payload: string }
@@ -32,11 +20,25 @@ type Action =
   | { type: "SET_NEW_PASSWORD"; payload: string }
   | { type: "SET_CONFIRM_PASSWORD"; payload: string }
   | { type: "SET_MODAL_OPEN"; payload: boolean }
+  | { type: "SET_DELETE_MODAL_OPEN"; payload: boolean }
   | { type: "TOGGLE_SHOW_OLD_PASSWORD" }
   | { type: "TOGGLE_SHOW_NEW_PASSWORD" }
   | { type: "TOGGLE_SHOW_CONFIRM_PASSWORD" }
   | { type: "RESET_PASSWORD_FIELDS" }
   | { type: "RESET_NAME_EMAIL" };
+
+type State = {
+  name: string;
+  email: string;
+  oldPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+  isModalOpen: boolean;
+  isDeleteModalOpen: boolean;
+  showOldPassword: boolean;
+  showNewPassword: boolean;
+  showConfirmPassword: boolean;
+};
 
 const initialState: State = {
   name: "",
@@ -48,6 +50,7 @@ const initialState: State = {
   showOldPassword: false,
   showNewPassword: false,
   showConfirmPassword: false,
+  isDeleteModalOpen: false,
 };
 
 function reducer(state: State, action: Action): State {
@@ -64,6 +67,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, confirmPassword: action.payload };
     case "SET_MODAL_OPEN":
       return { ...state, isModalOpen: action.payload };
+    case "SET_DELETE_MODAL_OPEN":
+      return { ...state, isDeleteModalOpen: action.payload };
     case "TOGGLE_SHOW_OLD_PASSWORD":
       return { ...state, showOldPassword: !state.showOldPassword };
     case "TOGGLE_SHOW_NEW_PASSWORD":
@@ -92,9 +97,14 @@ export default function ProfilePage() {
   const profileMutation = useMutation({
     mutationFn: updateProfileAPI,
     onSuccess: (data) => {
+      console.log("Data", data);
       toast.success(data.message);
       dispatch({ type: "RESET_NAME_EMAIL" });
-      setUser({ name: data.user.name });
+      console.log("Sucess :", data);
+      setUser({
+        ...(data?.user?.name && { name: data.user.name }),
+        ...(data?.user?.email && { email: data.user.email }),
+      });
     },
     onError: (err: Error) => {
       console.log(err);
@@ -120,6 +130,7 @@ export default function ProfilePage() {
       toast.success(data.message);
       router.push("/login");
       localStorage.removeItem("token");
+      dispatch({ type: "SET_DELETE_MODAL_OPEN", payload: false });
     },
     onError: (err: Error) => {
       toast.error(err.message);
@@ -144,6 +155,7 @@ export default function ProfilePage() {
       return;
     }
 
+    console.log("Payload:", payload);
     profileMutation.mutate(payload);
   };
 
@@ -209,8 +221,9 @@ export default function ProfilePage() {
         onClick={handleSaveChanges}
         className="w-full py-2 rounded-lg mb-4 transition-colors hover:cursor-pointer"
         style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}
+        disabled={profileMutation.isPending}
       >
-        Save Changes
+        {profileMutation.isPending ? "Saving..." : "Save Changes"}
       </button>
 
       <button
@@ -226,17 +239,58 @@ export default function ProfilePage() {
       </button>
 
       <button
-        onClick={handleDeleteAccount}
+        onClick={() =>
+          dispatch({ type: "SET_DELETE_MODAL_OPEN", payload: true })
+        }
         className="w-full py-2 rounded-lg transition-colors hover:cursor-pointer"
         style={{ backgroundColor: "#b91c1c", color: "#fee2e2" }}
       >
         Delete Account
       </button>
 
-      {/* Modal */}
+      <Modal
+        isOpen={state.isDeleteModalOpen}
+        onClose={() =>
+          dispatch({ type: "SET_DELETE_MODAL_OPEN", payload: false })
+        }
+      >
+        <h2 className="text-xl font-semibold mb-4">Confirm Account Deletion</h2>
+        <p className="mb-6">
+          Are you sure you want to permanently delete your account? This action
+          cannot be undone.
+        </p>
+
+        <div className="flex justify-end gap-3">
+          <button
+            onClick={() =>
+              dispatch({ type: "SET_DELETE_MODAL_OPEN", payload: false })
+            }
+            className="px-4 py-2 rounded-lg hover:cursor-pointer"
+            style={{
+              backgroundColor: "var(--bg)",
+              color: "var(--text)",
+              border: "1px solid var(--text)",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            className="px-4 py-2 rounded-lg hover:cursor-pointer"
+            style={{ backgroundColor: "#b91c1c", color: "#fee2e2" }}
+            disabled={deleteMutation.isPending}
+          >
+            {deleteMutation.isPending ? "Deleting..." : "Yes, Delete"}
+          </button>
+        </div>
+      </Modal>
+
       <Modal
         isOpen={state.isModalOpen}
-        onClose={() => dispatch({ type: "SET_MODAL_OPEN", payload: false })}
+        onClose={() => {
+          dispatch({ type: "SET_MODAL_OPEN", payload: false });
+          dispatch({ type: "RESET_PASSWORD_FIELDS" });
+        }}
       >
         <h2 className="text-xl font-semibold mb-4 space-y-2">
           Change Password
@@ -282,7 +336,10 @@ export default function ProfilePage() {
 
         <div className="flex justify-end mt-4 gap-2">
           <button
-            onClick={() => dispatch({ type: "SET_MODAL_OPEN", payload: false })}
+            onClick={() => {
+              dispatch({ type: "SET_MODAL_OPEN", payload: false });
+              dispatch({ type: "RESET_PASSWORD_FIELDS" });
+            }}
             className="px-4 py-2 rounded-lg hover:cursor-pointer"
             style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}
           >
@@ -291,8 +348,9 @@ export default function ProfilePage() {
           <button
             onClick={handleChangePasswordSubmit}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:cursor-pointer"
+            disabled={passwordMutation.isPending}
           >
-            Submit
+            {passwordMutation.isPending ? "Submitting..." : "Submit"}
           </button>
         </div>
       </Modal>

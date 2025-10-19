@@ -25,6 +25,12 @@ export class Token {
   })
   type: TokenType;
 
+  @Prop({ trim: true })
+  newEmail?: string;
+
+  @Prop()
+  answer?: number;
+
   @Prop({
     required: true,
   })

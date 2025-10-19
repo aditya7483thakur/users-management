@@ -8,6 +8,7 @@ import {
   Delete,
   Param,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { UserService } from '../user.service';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
@@ -28,9 +29,12 @@ export class UserController {
 
   // Set Password → handles both first-time verification & password reset
   @Post('set-password')
-  async setPassword(@Body() dto: ResetPasswordDto) {
+  async setPassword(
+    @Query('token') token: string,
+    @Body() dto: ResetPasswordDto,
+  ) {
     return this.userService.setPassword(
-      dto.token,
+      token,
       dto.password,
       dto.confirmPassword,
     );
@@ -48,6 +52,11 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   async updateProfile(@Request() req, @Body() dto: UpdateUserDto) {
     return this.userService.updateUser(req.user.sub, dto);
+  }
+
+  @Patch('verify-email')
+  async verifyEmail(@Query('token') token: string) {
+    return this.userService.verifyEmailUpdate(token);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -81,5 +90,21 @@ export class UserController {
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     return this.userService.deleteUser(id);
+  }
+
+  @Get()
+  async getCaptcha() {
+    const captcha = await this.userService.generateCaptcha();
+    return captcha; // { captchaId, num1, num2, operation }
+  }
+
+  // 🔹 POST /captcha/verify → verify captcha
+  @Post('verify')
+  async verifyCaptcha(
+    @Body('captchaId') captchaId: string,
+    @Body('captchaAnswer') captchaAnswer: number,
+  ) {
+    await this.userService.verifyCaptcha(captchaId, captchaAnswer);
+    return { message: 'Captcha verified successfully', ok: true };
   }
 }

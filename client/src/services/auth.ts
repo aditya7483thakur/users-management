@@ -74,11 +74,13 @@ export async function setPasswordAPI(data: SetPasswordData) {
   try {
     const encodedPassword = btoa(data.password);
     const encodedConfirmPassword = btoa(data.confirmPassword);
-    const res = await axiosInstance.post("/user/set-password", {
-      ...data,
-      password: encodedPassword,
-      confirmPassword: encodedConfirmPassword,
-    });
+    const res = await axiosInstance.post(
+      `/user/set-password?token=${data.token}`,
+      {
+        password: encodedPassword,
+        confirmPassword: encodedConfirmPassword,
+      }
+    );
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -225,6 +227,22 @@ export async function changeThemeAPI(data: ChangeThemeData) {
   }
 }
 
+// verify email
+export async function verifyEmailAPI(token: string) {
+  try {
+    const res = await axiosInstance.patch(`/user/verify-email?token=${token}`);
+    return res.data;
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to update email";
+      throw new Error(errorMessage);
+    } else {
+      throw new Error("Failed to update email");
+    }
+  }
+}
+
 // -------------------------
 // Wrapper function (infra retry example)
 // -------------------------
@@ -254,7 +272,7 @@ export async function wrapperFunction<T>(
     }
 
     if (i < attempts) {
-      delay(wait);
+      await delay(wait);
     }
   }
 
