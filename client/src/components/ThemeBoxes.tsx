@@ -11,7 +11,10 @@ export default function ThemeBoxes() {
   const { isPending, mutate, variables } = useMutation({
     mutationFn: changeThemeAPI,
     onSuccess: (data) => {
-      setUser({ name: data.name, theme: data.theme });
+      {
+        console.log(data);
+      }
+      setUser({ name: data.user.name, theme: data.user.theme });
     },
     onError: (err: Error) => {
       toast.error(err.message);

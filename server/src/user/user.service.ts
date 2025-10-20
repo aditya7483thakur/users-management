@@ -23,7 +23,7 @@ export class UserService {
     private jwtService: JwtService,
   ) {}
   // -------------------------
-  // 1️⃣ Register user & send verification email
+  // Register user & send verification email
   // -------------------------
   async register(
     name: string,
@@ -75,7 +75,7 @@ export class UserService {
   }
 
   // -------------------------
-  // 2️⃣ Login
+  // Login
   // -------------------------
   async login(
     email: string,
@@ -105,6 +105,9 @@ export class UserService {
     return { message: 'Login successful!', token: jwt, ok: true };
   }
 
+  // -------------------------
+  // Logout
+  // -------------------------
   async logout(userId: string, currentToken: string) {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
@@ -117,7 +120,7 @@ export class UserService {
   }
 
   // -------------------------
-  // 3️⃣ Forgot password → send reset email
+  // Forgot password → send reset email
   // -------------------------
   async forgotPassword(email: string) {
     const user = await this.userModel.findOne({ email });
@@ -155,11 +158,11 @@ export class UserService {
   `,
     );
 
-    return { message: 'Password reset email sent', token, ok: true };
+    return { message: 'Password reset email sent', ok: true };
   }
 
   // -------------------------
-  // 4️⃣ Unified setPassword → handles first-time verification & password reset
+  // Unified setPassword → handles first-time verification & password reset
   // -------------------------
   async setPassword(token: string, password: string, confirmPassword: string) {
     // 🔹 Decode Base64 passwords
@@ -215,6 +218,9 @@ export class UserService {
     return { message: 'Password set successfully', ok: true };
   }
 
+  // -------------------------
+  // Email verification for the updation of email
+  // -------------------------
   async verifyEmailUpdate(token: string) {
     // 1️⃣ Find the token and ensure it's for EMAIL_UPDATE
     const record = await this.tokenModel.findOne({
@@ -255,7 +261,9 @@ export class UserService {
     return { message: 'Email updated successfully', ok: true };
   }
 
+  // -------------------------
   // change password for logged-in users
+  // -------------------------
   async changePassword(
     userId: string,
     oldPassword: string,
@@ -306,7 +314,7 @@ export class UserService {
   }
 
   // -------------------------
-  // 5️⃣ Get user profile
+  // Get user profile
   // -------------------------
   async getUser(userId: string) {
     const user = await this.userModel
@@ -317,15 +325,16 @@ export class UserService {
   }
 
   // -------------------------
-  // 6️⃣ Update user profile
+  // Update user profile
   // -------------------------
   async updateUser(userId: string, dto: UpdateUserDto) {
-    // 🧩 Guard: empty body → no update
     if (!dto.name && !dto.email) {
       return { message: 'No changes detected', ok: true };
     }
 
-    const user = await this.userModel.findById(userId);
+    const user = await this.userModel
+      .findById(userId)
+      .select(' -passwordHash -jwt');
     if (!user) throw new NotFoundException('User not found');
 
     let nameChanged = false;
@@ -408,7 +417,7 @@ export class UserService {
   }
 
   // -------------------------
-  // 7️⃣ Get all users
+  // Get all users
   // -------------------------
   async getAllUsers() {
     const chance = Math.random();
@@ -427,7 +436,7 @@ export class UserService {
   }
 
   // -------------------------
-  // 8️⃣ Delete user
+  // Delete user
   // -------------------------
   async deleteUser(userId: string) {
     const user = await this.userModel.findByIdAndDelete(userId);
@@ -436,23 +445,43 @@ export class UserService {
   }
 
   // -------------------------
-  // 9️⃣ Change theme
+  // Change theme
   // -------------------------
   async changeTheme(userId: string, theme: string) {
     const user = await this.userModel
       .findByIdAndUpdate(userId, { theme }, { new: true })
-      .select('-passwordHash');
+      .select('-passwordHash -jwt');
     if (!user) throw new NotFoundException('User not found');
-    return user;
+    return { message: 'Theme updated successfully', user, ok: true };
   }
 
-  //GENERATE CAPTCHA
+  // -------------------------
+  // Generate Captcha
+  // -------------------------
   async generateCaptcha() {
-    const num1 = Math.floor(Math.random() * 10) + 1; // 1-10
-    const num2 = Math.floor(Math.random() * 10) + 1; // 1-10
-    const operation = '+'; // For simplicity, only addition
+    const num1 = Math.floor(Math.random() * 10) + 1; // 1–10
+    const num2 = Math.floor(Math.random() * 10) + 1; // 1–10
 
-    const answer = num1 + num2;
+    // Randomly select an operation
+    const operations = ['+', '-', '*'];
+    const operation = operations[Math.floor(Math.random() * operations.length)];
+
+    // Compute the answer based on the operation
+    let answer: number;
+    switch (operation) {
+      case '+':
+        answer = num1 + num2;
+        break;
+      case '-':
+        answer = num1 - num2;
+        break;
+      case '*':
+        answer = num1 * num2;
+        break;
+      default:
+        throw new Error('Invalid operation');
+    }
+
     const captchaId = uuidv4();
 
     // Save captcha in token collection
@@ -467,7 +496,9 @@ export class UserService {
     return { captchaId, num1, num2, operation };
   }
 
-  // Verify captcha
+  // -------------------------
+  // Verify Captcha
+  // -------------------------
   async verifyCaptcha(captchaId: string, captchaAnswer: number) {
     const record = await this.tokenModel.findOne({
       token: captchaId,
