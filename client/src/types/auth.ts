@@ -40,9 +40,10 @@ export interface ChangeThemeData {
 // types/api.ts
 export interface ApiResponse<T> {
   ok: boolean;
-  data: T | null; // null means "no data"
+  data: T | null;
   message: string;
   error?: string;
+  nextCursor?: string | null;
 }
 
 export interface User {

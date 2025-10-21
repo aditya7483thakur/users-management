@@ -164,17 +164,19 @@ export async function logoutAPI() {
 }
 
 // get all users
-export async function getAllUsersAPI() {
+export async function getAllUsersAPI(limit = 10, cursor?: string) {
   try {
-    const res = await axiosInstance.get("/user");
-    return res.data;
+    const params: Record<string, any> = { limit };
+    if (cursor) params.cursor = cursor;
+
+    const res = await axiosInstance.get("/user", { params });
+    return res.data; // this should be ApiResponse<User[]>
   } catch (err) {
     if (axios.isAxiosError(err)) {
-      const errorMessage =
-        err.response?.data?.message || "Failed to get profiles";
+      const errorMessage = err.response?.data?.message || "Failed to get users";
       throw new Error(errorMessage);
     } else {
-      throw new Error("Failed to get profiles");
+      throw new Error("Failed to get users");
     }
   }
 }
@@ -267,7 +269,7 @@ export async function wrapperFunction<T>(
   reqFn: () => Promise<ApiResponse<T>>,
   attempts = 3,
   wait = 1000
-): Promise<T> {
+): Promise<ApiResponse<T>> {
   let lastError: unknown = null;
 
   for (let i = 1; i <= attempts; i++) {
@@ -276,7 +278,7 @@ export async function wrapperFunction<T>(
 
       if (res.ok && res.data !== null) {
         console.log(`✅ Success on attempt ${i}`);
-        return res.data;
+        return res;
       }
 
       lastError = res.error || "No data";

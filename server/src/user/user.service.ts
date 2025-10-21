@@ -419,19 +419,61 @@ export class UserService {
   // -------------------------
   // Get all users
   // -------------------------
-  async getAllUsers() {
-    const chance = Math.random();
+  // async getAllUsers(page = 1, limit = 10) {
+  //   const chance = Math.random();
 
-    const users =
-      chance < 0.5
-        ? []
-        : await this.userModel.find().select('-passwordHash -jwt');
+  //   let users: Omit<UserDocument, 'passwordHash' | 'jwt'>[] = [];
+
+  //   if (chance >= 0.5) {
+  //     const skip = (page - 1) * limit;
+  //     users = await this.userModel
+  //       .find()
+  //       .select('-passwordHash -jwt')
+  //       .skip(skip)
+  //       .limit(limit);
+  //   }
+
+  //   return {
+  //     ok: true,
+  //     data: users.length > 0 ? users : null,
+  //     message:
+  //       users.length > 0 ? 'Users fetched successfully' : 'No users found',
+  //     pagination: {
+  //       page,
+  //       limit,
+  //       hasMore: users.length > 0 ? users.length === limit : false,
+  //     },
+  //   };
+  // }
+
+  async getAllUsers(limit = 10, cursor?: string) {
+    const chance = Math.random();
+    let users: Omit<UserDocument, 'passwordHash' | 'jwt'>[] = [];
+
+    // Convert cursor to ObjectId if exists
+    const query: any = {};
+    if (cursor) query._id = { $gt: cursor };
+
+    if (chance >= 0.5) {
+      users = await this.userModel
+        .find(query)
+        .select('-passwordHash -jwt')
+        .sort({ _id: 1 })
+        .limit(limit + 1); // fetch one extra to know if more exists
+    }
+
+    let nextCursor: string | null = null;
+    if (users.length > limit) {
+      const nextUser = users.pop(); // remove extra
+      nextCursor = nextUser?._id.toString() || null;
+    }
 
     return {
       ok: true,
       data: users.length > 0 ? users : null,
       message:
         users.length > 0 ? 'Users fetched successfully' : 'No users found',
+      nextCursor,
     };
   }
 

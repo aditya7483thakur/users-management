@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Trash2, Mail, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  InfiniteData,
+  useInfiniteQuery,
+  useMutation,
+} from "@tanstack/react-query";
 import {
   deleteUserAPI,
   getAllUsersAPI,
@@ -11,7 +15,7 @@ import {
 } from "@/services/auth";
 import { useThemeStore } from "@/providers/store";
 import Modal from "@/components/Modal";
-import { User } from "@/types/auth";
+import { ApiResponse, User } from "@/types/auth";
 
 const modalStyles = {
   backgroundColor: "var(--bg)",
@@ -28,15 +32,29 @@ export default function Page() {
 
   const resetTimer = () => setTimer(10);
 
-  // Fetch all users
-  const getAllUsersQuery = useQuery<User[] | null>({
-    queryKey: ["allUsers"],
-    queryFn: () => wrapperFunction(getAllUsersAPI, 10, 500),
-    refetchInterval: false,
+  // Infinite query
+  const getAllUsersQuery = useInfiniteQuery<
+    ApiResponse<User[]>, // TData
+    Error, // TError
+    ApiResponse<User[]>, // TInfiniteData
+    string[], // TQueryKey
+    string | undefined // TPageParam (cursor)
+  >({
+    queryKey: ["users"],
+    queryFn: ({ pageParam }) =>
+      wrapperFunction(() => getAllUsersAPI(10, pageParam), 10, 1000),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     retry: 0,
   });
 
-  // Delete user by ID
+  // Combine all users into a single arrayconst users: User[]
+  const users: User[] =
+    (
+      getAllUsersQuery.data as InfiniteData<ApiResponse<User[]>> | undefined
+    )?.pages.flatMap((page) => page.data ?? []) ?? [];
+
+  // Delete user mutation
   const deleteUserMutate = useMutation({
     mutationFn: deleteUserAPI,
     onSuccess: (data) => {
@@ -51,18 +69,17 @@ export default function Page() {
     },
   });
 
+  // Auto-refresh timer
   useEffect(() => {
-    const interval = setInterval(
-      () =>
-        setTimer((prev) => {
-          if (prev == 1) {
-            getAllUsersQuery.refetch();
-            return 10;
-          }
-          return prev - 1;
-        }),
-      1000
-    );
+    const interval = setInterval(() => {
+      setTimer((prev) => {
+        if (prev === 1) {
+          getAllUsersQuery.refetch();
+          return 10;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -88,7 +105,25 @@ export default function Page() {
     resetTimer();
   };
 
-  // 💡 Loader UI
+  // Infinite scroll observer
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastUserRef = useCallback(
+    (node: HTMLTableRowElement | null) => {
+      if (getAllUsersQuery.isFetchingNextPage) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && getAllUsersQuery.hasNextPage) {
+          getAllUsersQuery.fetchNextPage();
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [getAllUsersQuery.isFetchingNextPage, getAllUsersQuery.hasNextPage]
+  );
+
+  // Loader
   if (getAllUsersQuery.isLoading) {
     return (
       <section className="flex flex-col items-center justify-center h-[70vh]">
@@ -104,7 +139,7 @@ export default function Page() {
     return (
       <section className="flex flex-col items-center justify-center h-[70vh]">
         <p className="text-red-600 font-bold text-2xl animate-pulse">
-          An error occured !
+          An error occured!
         </p>
       </section>
     );
@@ -127,7 +162,7 @@ export default function Page() {
       </div>
 
       <div
-        className="overflow-x-auto rounded-2xl shadow-md border border-opacity-20"
+        className="overflow-x-auto rounded-2xl shadow-md border border-opacity-20 max-h-[70vh] overflow-y-auto"
         style={modalStyles}
       >
         <table className="min-w-full text-sm">
@@ -141,9 +176,11 @@ export default function Page() {
             </tr>
           </thead>
           <tbody>
-            {getAllUsersQuery?.data?.map(
-              (user: { _id: string; email: string }) => (
+            {users.map((user, idx) => {
+              const isLastUser = idx === users.length - 1;
+              return (
                 <tr
+                  ref={isLastUser ? lastUserRef : null}
                   key={user._id}
                   className="transition-colors hover:bg-[color-mix(in_srgb,var(--bg)_85%,var(--text)_10%)]"
                 >
@@ -167,7 +204,14 @@ export default function Page() {
                     )}
                   </td>
                 </tr>
-              )
+              );
+            })}
+            {getAllUsersQuery.isFetchingNextPage && (
+              <tr>
+                <td colSpan={2} className="py-4 px-6 text-center">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto" />
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

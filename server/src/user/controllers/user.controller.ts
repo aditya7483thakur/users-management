@@ -73,10 +73,21 @@ export class UserController {
   }
 
   // Get all users (admin)
+  // @UseGuards(JwtAuthGuard)
+  // @Get()
+  // async getAllUsers(@Query('page') page = 1, @Query('limit') limit = 10) {
+  //   const pageNumber = Number(page);
+  //   const limitNumber = Number(limit);
+  //   return this.userService.getAllUsers(pageNumber, limitNumber);
+  // }
   @UseGuards(JwtAuthGuard)
   @Get()
-  async getAllUsers() {
-    return this.userService.getAllUsers();
+  async getAllUsers(
+    @Query('limit') limit = 10,
+    @Query('cursor') cursor?: string,
+  ) {
+    const limitNumber = Number(limit);
+    return this.userService.getAllUsers(limitNumber, cursor);
   }
 
   // Delete other's account
