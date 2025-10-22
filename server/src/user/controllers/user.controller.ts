@@ -73,13 +73,6 @@ export class UserController {
   }
 
   // Get all users (admin)
-  // @UseGuards(JwtAuthGuard)
-  // @Get()
-  // async getAllUsers(@Query('page') page = 1, @Query('limit') limit = 10) {
-  //   const pageNumber = Number(page);
-  //   const limitNumber = Number(limit);
-  //   return this.userService.getAllUsers(pageNumber, limitNumber);
-  // }
   @UseGuards(JwtAuthGuard)
   @Get()
   async getAllUsers(
@@ -103,9 +96,10 @@ export class UserController {
     return this.userService.deleteUser(id);
   }
 
-  @Get()
+  @Get('captcha')
   async getCaptcha() {
     const captcha = await this.userService.generateCaptcha();
-    return captcha; // { captchaId, num1, num2, operation }
+    return captcha;
+    // { captchaId, svg }
   }
 }

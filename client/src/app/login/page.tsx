@@ -67,8 +67,8 @@ export default function LoginPage() {
 
   const {
     data: captcha,
-    refetch: reloadCaptcha,
     isLoading: captchaLoading,
+    refetch: reloadCaptcha,
   } = useQuery({
     queryKey: ["captcha"],
     queryFn: generateCaptchaAPI,
@@ -164,41 +164,45 @@ export default function LoginPage() {
               <p>Loading captcha...</p>
             ) : (
               <>
-                <label className="block text-sm font-medium mb-1 text-gray-700">
-                  What is {captcha.num1} {captcha.operation} {captcha.num2}?
-                </label>
-                <input
-                  type="text"
-                  value={state.captchaAnswer}
-                  onChange={(e) =>
-                    dispatch({
-                      type: "SET_CAPTCHA_ANSWER",
-                      payload: e.target.value,
-                    })
-                  }
-                  required
-                  placeholder="Enter captcha answer"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => reloadCaptcha()}
-                  className="text-sm text-blue-500 underline mt-1"
-                >
-                  Reload Captcha
-                </button>
+                <div className="flex">
+                  <img
+                    src={`data:image/svg+xml;base64,${btoa(captcha.svg)}`}
+                    alt="Captcha"
+                  />
+                  <input
+                    type="text"
+                    value={state.captchaAnswer}
+                    onChange={(e) =>
+                      dispatch({
+                        type: "SET_CAPTCHA_ANSWER",
+                        payload: e.target.value,
+                      })
+                    }
+                    required
+                    placeholder="Enter captcha answer"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </>
             )}
           </div>
 
           {/* Forgot Password */}
-          <div className="text-right">
+          <div className="text-right  flex justify-between">
             <button
               type="button"
               onClick={() => dispatch({ type: "OPEN_FORGOT_MODAL" })}
               className="text-sm text-blue-600 hover:underline hover:cursor-pointer"
             >
               Forgot password?
+            </button>
+
+            <button
+              type="button"
+              onClick={() => reloadCaptcha()}
+              className="text-sm text-blue-500 underline mt-1"
+            >
+              Reload Captcha
             </button>
           </div>
 

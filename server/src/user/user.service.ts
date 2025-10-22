@@ -9,7 +9,7 @@ import { sendEmail } from 'src/utils/sendEmail';
 import { TokenType } from 'src/enums/auth.enums';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-
+import svgCaptcha from 'svg-captcha';
 import { User, UserDocument } from '../user/schemas/user.schema';
 import { Token, TokenDocument } from '../user/schemas/token.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -416,36 +416,6 @@ export class UserService {
     };
   }
 
-  // -------------------------
-  // Get all users
-  // -------------------------
-  // async getAllUsers(page = 1, limit = 10) {
-  //   const chance = Math.random();
-
-  //   let users: Omit<UserDocument, 'passwordHash' | 'jwt'>[] = [];
-
-  //   if (chance >= 0.5) {
-  //     const skip = (page - 1) * limit;
-  //     users = await this.userModel
-  //       .find()
-  //       .select('-passwordHash -jwt')
-  //       .skip(skip)
-  //       .limit(limit);
-  //   }
-
-  //   return {
-  //     ok: true,
-  //     data: users.length > 0 ? users : null,
-  //     message:
-  //       users.length > 0 ? 'Users fetched successfully' : 'No users found',
-  //     pagination: {
-  //       page,
-  //       limit,
-  //       hasMore: users.length > 0 ? users.length === limit : false,
-  //     },
-  //   };
-  // }
-
   async getAllUsers(limit = 10, cursor?: string) {
     const chance = Math.random();
     let users: Omit<UserDocument, 'passwordHash' | 'jwt'>[] = [];
@@ -500,42 +470,73 @@ export class UserService {
   // -------------------------
   // Generate Captcha
   // -------------------------
+  // async generateCaptcha() {
+  //   const num1 = Math.floor(Math.random() * 10) + 1; // 1–10
+  //   const num2 = Math.floor(Math.random() * 10) + 1; // 1–10
+
+  //   // Randomly select an operation
+  //   const operations = ['+', '-', '*'];
+  //   const operation = operations[Math.floor(Math.random() * operations.length)];
+
+  //   // Compute the answer based on the operation
+  //   let answer: number;
+  //   switch (operation) {
+  //     case '+':
+  //       answer = num1 + num2;
+  //       break;
+  //     case '-':
+  //       answer = num1 - num2;
+  //       break;
+  //     case '*':
+  //       answer = num1 * num2;
+  //       break;
+  //     default:
+  //       throw new Error('Invalid operation');
+  //   }
+
+  //   const captchaId = uuidv4();
+
+  //   // Save captcha in token collection
+  //   await this.tokenModel.create({
+  //     token: captchaId,
+  //     type: TokenType.CAPTCHA,
+  //     answer,
+  //     user: null,
+  //     expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 mins expiry
+  //   });
+
+  //   return { captchaId, num1, num2, operation };
+  // }
+
   async generateCaptcha() {
-    const num1 = Math.floor(Math.random() * 10) + 1; // 1–10
-    const num2 = Math.floor(Math.random() * 10) + 1; // 1–10
-
-    // Randomly select an operation
-    const operations = ['+', '-', '*'];
-    const operation = operations[Math.floor(Math.random() * operations.length)];
-
-    // Compute the answer based on the operation
-    let answer: number;
-    switch (operation) {
-      case '+':
-        answer = num1 + num2;
-        break;
-      case '-':
-        answer = num1 - num2;
-        break;
-      case '*':
-        answer = num1 * num2;
-        break;
-      default:
-        throw new Error('Invalid operation');
-    }
+    // Create a math expression captcha
+    const captcha = svgCaptcha.createMathExpr({
+      mathMin: 1, // min number
+      mathMax: 10, // max number
+      mathOperator: '+-*', // allowed operators
+      noise: 2, // lines to make OCR harder
+      color: true, // colorful characters
+      background: '#eee', // background color
+      width: 120,
+      height: 50,
+      fontSize: 40,
+    });
 
     const captchaId = uuidv4();
 
-    // Save captcha in token collection
+    // Save the answer in token collection
     await this.tokenModel.create({
       token: captchaId,
       type: TokenType.CAPTCHA,
-      answer,
+      answer: captcha.text, // math result
       user: null,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 mins expiry
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
     });
 
-    return { captchaId, num1, num2, operation };
+    return {
+      captchaId,
+      svg: captcha.data, // SVG image as string
+    };
   }
 
   // -------------------------

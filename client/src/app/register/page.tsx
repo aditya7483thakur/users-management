@@ -6,18 +6,16 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 
 export default function RegisterPage() {
-  // 🔹 Single-state form
   const [form, setForm] = useState({
     name: "",
     email: "",
     captchaAnswer: "",
   });
 
-  // 🔹 Fetch captcha from backend
   const {
     data: captcha,
-    refetch: reloadCaptcha,
     isLoading: captchaLoading,
+    refetch: reloadCaptcha,
   } = useQuery({
     queryKey: ["captcha"],
     queryFn: generateCaptchaAPI,
@@ -33,11 +31,10 @@ export default function RegisterPage() {
     },
     onError: (err: Error) => {
       toast.error(err.message);
-      reloadCaptcha(); // reload captcha on error
+      reloadCaptcha();
     },
   });
 
-  // 🔹 Handle form submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!captcha?.captchaId) return toast.error("Captcha not loaded yet");
@@ -94,19 +91,22 @@ export default function RegisterPage() {
               <p>Loading captcha...</p>
             ) : (
               <>
-                <label className="block text-sm font-medium mb-1 text-gray-700">
-                  What is {captcha.num1} {captcha.operation} {captcha.num2}?
-                </label>
-                <input
-                  type="text"
-                  value={form.captchaAnswer}
-                  onChange={(e) =>
-                    setForm({ ...form, captchaAnswer: e.target.value })
-                  }
-                  required
-                  placeholder="Enter captcha answer"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div className="flex">
+                  <img
+                    src={`data:image/svg+xml;base64,${btoa(captcha.svg)}`}
+                    alt="Captcha"
+                  />
+                  <input
+                    type="text"
+                    value={form.captchaAnswer}
+                    onChange={(e) =>
+                      setForm({ ...form, captchaAnswer: e.target.value })
+                    }
+                    required
+                    placeholder="Enter captcha answer"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={() => reloadCaptcha()}
