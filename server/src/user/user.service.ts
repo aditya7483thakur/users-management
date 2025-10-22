@@ -14,7 +14,7 @@ import { User, UserDocument } from '../user/schemas/user.schema';
 import { Token, TokenDocument } from '../user/schemas/token.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 @Injectable()
 export class UserService {
   constructor(
@@ -418,32 +418,37 @@ export class UserService {
 
   async getAllUsers(limit = 10, cursor?: string) {
     const chance = Math.random();
-    let users: Omit<UserDocument, 'passwordHash' | 'jwt'>[] = [];
-
     // Convert cursor to ObjectId if exists
-    const query: any = {};
-    if (cursor) query._id = { $gt: cursor };
 
+    const query: { _id?: { $gt: Types.ObjectId } } = {};
+    if (cursor) query._id = { $gt: new Types.ObjectId(cursor) };
+
+    // Fetch users only if chance allows
+    let users: Omit<UserDocument, 'passwordHash' | 'jwt'>[] = [];
     if (chance >= 0.5) {
       users = await this.userModel
         .find(query)
         .select('-passwordHash -jwt')
         .sort({ _id: 1 })
-        .limit(limit + 1); // fetch one extra to know if more exists
+        .limit(limit + 1); // fetch one extra
     }
 
-    let nextCursor: string | null = null;
+    // Determine nextCursor only if there really is a next page
+    let nextCursor: string | undefined = undefined;
     if (users.length > limit) {
-      const nextUser = users.pop(); // remove extra
-      nextCursor = nextUser?._id.toString() || null;
+      const nextUser = users.pop();
+      nextCursor = nextUser?._id.toString();
     }
+
+    // Now data: null ONLY if we intentionally want to simulate missing data
+    const dataToSend = users.length > 0 ? users : chance < 0.5 ? null : [];
 
     return {
       ok: true,
-      data: users.length > 0 ? users : null,
+      data: dataToSend, // array or null for gimmick
       message:
         users.length > 0 ? 'Users fetched successfully' : 'No users found',
-      nextCursor,
+      nextCursor, // undefined if no more pages
     };
   }
 
@@ -470,46 +475,7 @@ export class UserService {
   // -------------------------
   // Generate Captcha
   // -------------------------
-  // async generateCaptcha() {
-  //   const num1 = Math.floor(Math.random() * 10) + 1; // 1–10
-  //   const num2 = Math.floor(Math.random() * 10) + 1; // 1–10
-
-  //   // Randomly select an operation
-  //   const operations = ['+', '-', '*'];
-  //   const operation = operations[Math.floor(Math.random() * operations.length)];
-
-  //   // Compute the answer based on the operation
-  //   let answer: number;
-  //   switch (operation) {
-  //     case '+':
-  //       answer = num1 + num2;
-  //       break;
-  //     case '-':
-  //       answer = num1 - num2;
-  //       break;
-  //     case '*':
-  //       answer = num1 * num2;
-  //       break;
-  //     default:
-  //       throw new Error('Invalid operation');
-  //   }
-
-  //   const captchaId = uuidv4();
-
-  //   // Save captcha in token collection
-  //   await this.tokenModel.create({
-  //     token: captchaId,
-  //     type: TokenType.CAPTCHA,
-  //     answer,
-  //     user: null,
-  //     expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 mins expiry
-  //   });
-
-  //   return { captchaId, num1, num2, operation };
-  // }
-
   async generateCaptcha() {
-    // Create a math expression captcha
     const captcha = svgCaptcha.createMathExpr({
       mathMin: 1, // min number
       mathMax: 10, // max number
@@ -524,7 +490,6 @@ export class UserService {
 
     const captchaId = uuidv4();
 
-    // Save the answer in token collection
     await this.tokenModel.create({
       token: captchaId,
       type: TokenType.CAPTCHA,

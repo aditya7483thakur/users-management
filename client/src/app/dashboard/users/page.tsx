@@ -44,7 +44,8 @@ export default function Page() {
     queryFn: ({ pageParam }) =>
       wrapperFunction(() => getAllUsersAPI(10, pageParam), 10, 1000),
     initialPageParam: undefined,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    getNextPageParam: (lastPage) =>
+      lastPage.data && lastPage.nextCursor ? lastPage.nextCursor : undefined,
     retry: 0,
   });
 
@@ -52,7 +53,9 @@ export default function Page() {
   const users: User[] =
     (
       getAllUsersQuery.data as InfiniteData<ApiResponse<User[]>> | undefined
-    )?.pages.flatMap((page) => page.data ?? []) ?? [];
+    )?.pages
+      .filter((page) => page.data) // only keep pages with data
+      .flatMap((page) => page.data!) ?? [];
 
   // Delete user mutation
   const deleteUserMutate = useMutation({

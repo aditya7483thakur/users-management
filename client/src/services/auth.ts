@@ -166,7 +166,7 @@ export async function logoutAPI() {
 // get all users
 export async function getAllUsersAPI(limit = 10, cursor?: string) {
   try {
-    const params: Record<string, any> = { limit };
+    const params: Record<string, string | number> = { limit };
     if (cursor) params.cursor = cursor;
 
     const res = await axiosInstance.get("/user", { params });
