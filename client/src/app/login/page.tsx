@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import Modal from "@/components/Modal";
 import PasswordInput from "@/components/PasswordInput";
+import { forgotPasswordSchema, loginSchema } from "@/lib/schemas";
 
 type State = {
   email: string;
@@ -101,23 +102,37 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!captcha?.captchaId) return toast.error("Captcha not loaded");
+
+    const validation = loginSchema.safeParse(state);
+
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]?.message;
+      return toast.error(firstError || "Invalid input");
+    }
+
     loginMutate.mutate({
-      email: state.email,
-      password: state.password,
+      email: validation.data.email,
+      password: validation.data.password,
       captchaId: captcha.captchaId,
-      captchaAnswer: Number(state.captchaAnswer),
+      captchaAnswer: Number(validation.data.captchaAnswer),
     });
   };
 
   const handleForgotSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!state.forgotEmail.trim()) {
-      toast.error("Please enter your email address.");
-      return;
+
+    const validation = forgotPasswordSchema.safeParse({
+      email: state.forgotEmail,
+    });
+
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]?.message;
+      return toast.error(firstError || "Invalid input");
     }
 
-    forgotPasswordMutate.mutate({ email: state.forgotEmail });
+    forgotPasswordMutate.mutate({ email: validation.data.email });
   };
 
   return (

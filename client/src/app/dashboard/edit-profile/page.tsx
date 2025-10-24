@@ -12,6 +12,7 @@ import {
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import PasswordInput from "@/components/PasswordInput";
+import { changePasswordSchema, updateProfileSchema } from "@/lib/schemas";
 
 type Action =
   | { type: "SET_NAME"; payload: string }
@@ -155,16 +156,33 @@ export default function ProfilePage() {
       return;
     }
 
-    console.log("Payload:", payload);
-    profileMutation.mutate(payload);
+    const parsed = updateProfileSchema.safeParse(payload);
+
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message || "Invalid input.";
+      toast.error(firstError);
+      return;
+    }
+
+    profileMutation.mutate(parsed.data);
   };
 
   const handleChangePasswordSubmit = () => {
-    passwordMutation.mutate({
-      oldPassword: state.oldPassword,
-      newPassword: state.newPassword,
-      confirmPassword: state.confirmPassword,
-    });
+    const payload = {
+      oldPassword: state.oldPassword.trim(),
+      newPassword: state.newPassword.trim(),
+      confirmPassword: state.confirmPassword.trim(),
+    };
+
+    const parsed = changePasswordSchema.safeParse(payload);
+
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message || "Invalid input.";
+      toast.error(firstError);
+      return;
+    }
+
+    passwordMutation.mutate(parsed.data);
   };
 
   const handleDeleteAccount = () => {

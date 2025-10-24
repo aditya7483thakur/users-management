@@ -1,5 +1,6 @@
 "use client";
 
+import { registerSchema } from "@/lib/schemas";
 import { generateCaptchaAPI, registerUserAPI } from "@/services/auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -37,13 +38,23 @@ export default function RegisterPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!captcha?.captchaId) return toast.error("Captcha not loaded yet");
 
+    // ✅ Validate form
+    const validation = registerSchema.safeParse(form);
+
+    if (!validation.success) {
+      const firstError = validation.error.issues[0]?.message;
+      return toast.error(firstError || "Invalid input");
+    }
+
+    // ✅ Call mutation with validated data
     mutate({
-      name: form.name,
-      email: form.email,
+      name: validation.data.name,
+      email: validation.data.email,
       captchaId: captcha.captchaId,
-      captchaAnswer: Number(form.captchaAnswer),
+      captchaAnswer: Number(validation.data.captchaAnswer),
     });
   };
 
