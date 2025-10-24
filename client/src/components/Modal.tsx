@@ -34,7 +34,7 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
       <div
         className="rounded-lg p-6 shadow-lg w-full max-w-md relative border"
         style={modalStyles}
-        onClick={(e) => e.stopPropagation()} // Prevent outer click
+        onClick={(e) => e.stopPropagation()}
       >
         {children}
       </div>
