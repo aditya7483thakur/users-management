@@ -1,0 +1,22 @@
+import {
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
+
+export class AddCustomThemeDto {
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(2)
+  @MaxLength(30)
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^#([0-9A-F]{3}){1,2}$/i, {
+    message: 'Invalid hex color format. Use format like #2679f3',
+  })
+  hex: string;
+}

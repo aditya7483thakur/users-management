@@ -40,6 +40,22 @@ export class User {
 
   @Prop({ type: [String], default: [] })
   jwt: string[];
+
+  @Prop({
+    type: [
+      {
+        _id: false,
+        name: { type: String, required: true, trim: true },
+        hex: {
+          type: String,
+          required: true,
+          match: /^#([0-9A-F]{3}){1,2}$/i,
+        },
+      },
+    ],
+    default: [],
+  })
+  customThemes: { name: string; hex: string }[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

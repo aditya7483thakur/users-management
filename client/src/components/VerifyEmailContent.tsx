@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { verifyEmailAPI } from "@/services/auth";
 import toast from "react-hot-toast";
@@ -8,11 +8,14 @@ import toast from "react-hot-toast";
 export default function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const router = useRouter();
 
   const { mutate, isPending, isSuccess } = useMutation({
     mutationFn: verifyEmailAPI,
-    onSuccess: (data) =>
-      toast.success(data.message || "Email verified successfully!"),
+    onSuccess: (data) => {
+      toast.success(data.message || "Email verified successfully!");
+      router.push("/dashboard");
+    },
     onError: (err: Error) =>
       toast.error(err.message || "Verification failed. Try again."),
   });
@@ -40,7 +43,7 @@ export default function VerifyEmailContent() {
             <button
               onClick={handleVerify}
               disabled={isPending}
-              className={`px-6 py-3 rounded-lg text-white font-medium transition ${
+              className={`px-6 py-3 rounded-lg hover:cursor-pointer text-white font-medium transition ${
                 isPending ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
               }`}
             >

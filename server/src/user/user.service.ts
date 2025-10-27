@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { UpdateUserDto } from '../user/dto/update-user.dto';
 import { sendEmail } from 'src/utils/sendEmail';
-import { TokenType } from 'src/enums/auth.enums';
+import { Theme, TokenType } from 'src/enums/auth.enums';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import svgCaptcha from 'svg-captcha';
@@ -15,6 +15,7 @@ import { Token, TokenDocument } from '../user/schemas/token.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { Model, Types } from 'mongoose';
+
 @Injectable()
 export class UserService {
   constructor(
@@ -417,6 +418,9 @@ export class UserService {
     };
   }
 
+  // -------------------------
+  // Get all users
+  // -------------------------
   async getAllUsers(limit = 10, cursor?: string) {
     const chance = Math.random();
     // Convert cursor to ObjectId if exists
@@ -533,5 +537,59 @@ export class UserService {
     await record.deleteOne();
 
     return true;
+  }
+
+  // -------------------------
+  // Add custom theme
+  // -------------------------
+  async addCustomTheme(userId: string, name: string, hex: string) {
+    // Check valid hex format
+    const isValidHex = /^#([0-9A-F]{3}){1,2}$/i.test(hex);
+    if (!isValidHex) throw new BadRequestException('Invalid hex color format');
+
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    // Check if theme already exists
+    const exists = user.customThemes.some(
+      (theme) => theme.name.toLowerCase() === name.toLowerCase(),
+    );
+    if (exists) throw new BadRequestException('Theme name already exists');
+
+    user.customThemes.push({ name, hex });
+    await user.save();
+
+    return {
+      message: 'Custom theme added successfully',
+      theme: hex,
+      ok: true,
+    };
+  }
+
+  // -------------------------
+  // Delete a custom theme
+  // -------------------------
+  async deleteCustomTheme(userId: string, name: string) {
+    const user = await this.userModel.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const beforeCount = user.customThemes.length;
+    user.customThemes = user.customThemes.filter(
+      (theme) => theme.name.toLowerCase() !== name.toLowerCase(),
+    );
+
+    if (user.customThemes.length === beforeCount) {
+      throw new NotFoundException('Theme not found');
+    }
+
+    user.theme = Theme.LIGHT;
+
+    await user.save();
+
+    return {
+      message: 'Custom theme deleted successfully',
+      ok: true,
+      theme: Theme.LIGHT,
+    };
   }
 }
