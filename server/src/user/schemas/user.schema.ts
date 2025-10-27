@@ -32,6 +32,7 @@ export class User {
   isVerified: boolean;
 
   @Prop({
+    type: String,
     enum: Theme,
     default: Theme.LIGHT,
   })

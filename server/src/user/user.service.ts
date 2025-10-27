@@ -319,7 +319,8 @@ export class UserService {
   async getUser(userId: string) {
     const user = await this.userModel
       .findById(userId)
-      .select('-passwordHash -jwt');
+      .select('-passwordHash -jwt')
+      .lean<Omit<User, 'passwordHash' | 'jwt'>>();
     if (!user) throw new NotFoundException('User not found');
     return user;
   }
@@ -442,7 +443,7 @@ export class UserService {
 
     // Now data: null ONLY if we intentionally want to simulate missing data
     const dataToSend = users.length > 0 ? users : chance < 0.5 ? null : [];
-
+    console.log(users);
     return {
       ok: true,
       data: dataToSend, // array or null for gimmick
@@ -468,8 +469,17 @@ export class UserService {
     const user = await this.userModel
       .findByIdAndUpdate(userId, { theme }, { new: true })
       .select('-passwordHash -jwt');
+
     if (!user) throw new NotFoundException('User not found');
-    return { message: 'Theme updated successfully', user, ok: true };
+
+    // Pick only needed fields
+    const { name, theme: updatedTheme } = user;
+
+    return {
+      message: 'Theme updated successfully',
+      user: { name, theme: updatedTheme },
+      ok: true,
+    };
   }
 
   // -------------------------

@@ -19,6 +19,7 @@ export class Token {
   token: string;
 
   @Prop({
+    type: String,
     required: true,
     enum: TokenType,
   })
