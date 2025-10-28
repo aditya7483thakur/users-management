@@ -11,6 +11,9 @@ export class AddCustomThemeDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(30)
+  @Matches(/^(?!\b(dark|light|red)\b$).*/i, {
+    message: 'Theme name cannot be "dark", "light", or "red".',
+  })
   name: string;
 
   @IsString()

@@ -1,7 +1,9 @@
-import { IsEnum } from 'class-validator';
-import { Theme } from 'src/enums/auth.enums';
+import { IsString, Matches } from 'class-validator';
 
 export class ChangeThemeDto {
-  @IsEnum(Theme, { message: 'Invalid theme selected' })
-  theme: Theme;
+  @IsString()
+  @Matches(/^#([0-9A-F]{3}){1,2}$/i, {
+    message: 'Theme must be a valid hex color code (e.g., #AABBCC)',
+  })
+  theme: string;
 }

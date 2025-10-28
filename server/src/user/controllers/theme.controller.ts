@@ -21,6 +21,7 @@ export class ThemeController {
   @UseGuards(JwtAuthGuard)
   @Patch('change')
   async changeTheme(@Request() req, @Body() dto: ChangeThemeDto) {
+    console.log(dto);
     return this.themeService.changeTheme(req.user.sub, dto.theme);
   }
 

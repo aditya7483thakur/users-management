@@ -573,23 +573,27 @@ export class UserService {
     const user = await this.userModel.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
-    const beforeCount = user.customThemes.length;
+    const themeToDelete = user.customThemes.find(
+      (t) => t.name.toLowerCase() === name.toLowerCase(),
+    );
+    if (!themeToDelete) throw new NotFoundException('Theme not found');
+
+    // Remove the theme
     user.customThemes = user.customThemes.filter(
-      (theme) => theme.name.toLowerCase() !== name.toLowerCase(),
+      (t) => t.name.toLowerCase() !== name.toLowerCase(),
     );
 
-    if (user.customThemes.length === beforeCount) {
-      throw new NotFoundException('Theme not found');
+    // If the user's current theme matches the hex of the deleted theme, reset to default
+    if (user.theme === themeToDelete.hex) {
+      user.theme = '#ffffff';
     }
-
-    user.theme = Theme.LIGHT;
 
     await user.save();
 
     return {
       message: 'Custom theme deleted successfully',
       ok: true,
-      theme: Theme.LIGHT,
+      theme: user.theme,
     };
   }
 }

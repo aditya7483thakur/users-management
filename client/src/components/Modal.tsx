@@ -20,20 +20,13 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
 
   if (!isOpen) return null;
 
-  const modalStyles = {
-    backgroundColor: "var(--bg,white)",
-    color: "var(--text)",
-    borderColor: "var(--text)",
-  };
-
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
-      onClick={onClose} // Outer click closes modal
+      className="fixed inset-0 bg-black/80 bg-opacity-40 flex items-center justify-center z-50"
+      onClick={onClose}
     >
       <div
-        className="rounded-lg p-6 shadow-lg w-full max-w-md relative border"
-        style={modalStyles}
+        className="rounded-lg p-6 bg-white text-black shadow-lg w-full max-w-md relative border"
         onClick={(e) => e.stopPropagation()}
       >
         {children}

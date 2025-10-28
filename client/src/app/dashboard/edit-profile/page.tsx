@@ -91,7 +91,7 @@ function reducer(state: State, action: Action): State {
 }
 
 export default function ProfilePage() {
-  const { theme, setUser } = useThemeStore();
+  const setUser = useThemeStore((state) => state.setUser);
   const [state, dispatch] = useReducer(reducer, initialState);
   const router = useRouter();
 
@@ -191,8 +191,10 @@ export default function ProfilePage() {
 
   return (
     <div
-      className={`max-w-md mx-auto mt-10 p-6 rounded-lg shadow-md theme-${theme}`}
-      style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
+      className="max-w-md mx-auto mt-10 p-6 rounded-lg shadow-md border-1"
+      style={{
+        borderColor: "--var(--foreground)",
+      }}
     >
       <h1 className="text-2xl font-semibold mb-6">Profile Settings</h1>
 
@@ -238,7 +240,10 @@ export default function ProfilePage() {
       <button
         onClick={handleSaveChanges}
         className="w-full py-2 rounded-lg mb-4 transition-colors hover:cursor-pointer"
-        style={{ backgroundColor: "var(--text)", color: "var(--bg)" }}
+        style={{
+          backgroundColor: "var(--foreground)",
+          color: "var(--background)",
+        }}
         disabled={profileMutation.isPending}
       >
         {profileMutation.isPending ? "Saving..." : "Save Changes"}
@@ -248,9 +253,8 @@ export default function ProfilePage() {
         onClick={() => dispatch({ type: "SET_MODAL_OPEN", payload: true })}
         className="w-full py-2 rounded-lg mb-4 transition-colors hover:cursor-pointer"
         style={{
-          backgroundColor: "var(--bg)",
-          color: "var(--text)",
-          border: "1px solid var(--text)",
+          backgroundColor: "var(--foreground)",
+          color: "var(--background)",
         }}
       >
         Change Password

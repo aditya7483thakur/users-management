@@ -49,6 +49,19 @@ export const changePasswordSchema = z
     message: "Passwords do not match.",
   });
 
+export const addCustomThemeSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Name must be at least 2 characters long")
+    .max(30, "Name must be at most 30 characters long")
+    .refine(
+      (val) => !["dark", "light", "red"].includes(val.toLowerCase()),
+      "Name cannot be 'dark', 'light', or 'red'"
+    ),
+  hex: z.string().regex(/^#([0-9A-F]{3}){1,2}$/i, "Invalid hex color format"),
+});
+
+export type AddThemeSchema = z.infer<typeof addCustomThemeSchema>;
 export type ChangePasswordData = z.infer<typeof changePasswordSchema>;
 export type UpdateProfileData = z.infer<typeof updateProfileSchema>;
 export type RegisterSchemaType = z.infer<typeof registerSchema>;

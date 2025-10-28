@@ -12,6 +12,11 @@ export interface RegisterData {
   captchaAnswer: number;
 }
 
+export interface AddCustomThemeData {
+  name: string;
+  hex: string;
+}
+
 export interface SetPasswordData {
   token: string;
   password: string;

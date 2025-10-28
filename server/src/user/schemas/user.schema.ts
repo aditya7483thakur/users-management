@@ -33,10 +33,11 @@ export class User {
 
   @Prop({
     type: String,
-    enum: Theme,
-    default: Theme.LIGHT,
+    required: true,
+    default: '#ffffff',
+    match: /^#([0-9A-F]{3}){1,2}$/i, // validates hex code
   })
-  theme: Theme;
+  theme: string;
 
   @Prop({ type: [String], default: [] })
   jwt: string[];

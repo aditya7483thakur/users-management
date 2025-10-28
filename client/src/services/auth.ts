@@ -1,5 +1,6 @@
 import axios from "axios";
 import {
+  AddCustomThemeData,
   ApiResponse,
   ChangePasswordData,
   ChangeThemeData,
@@ -105,6 +106,41 @@ export async function getProfileAPI() {
       throw new Error(errorMessage);
     } else {
       throw new Error("Profile fetching failed");
+    }
+  }
+}
+
+//Add custom theme
+export async function addCustomThemeAPI(data: AddCustomThemeData) {
+  try {
+    const res = await axiosInstance.post("/theme/add-custom-theme", data);
+    return res.data;
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const errorMessage =
+        err.response?.data?.message || "Something went wrong during addition";
+      throw new Error(errorMessage);
+    } else {
+      throw new Error("Custom theme addition failed");
+    }
+  }
+}
+
+//Delete Custom Theme
+export async function deleteCustomThemeAPI(themeName: string) {
+  try {
+    console.log(themeName);
+    const res = await axiosInstance.delete("/theme/delete-custom-theme", {
+      data: { name: themeName },
+    });
+    return res.data;
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const errorMessage =
+        err.response?.data?.message || "Failed to delete the theme";
+      throw new Error(errorMessage);
+    } else {
+      throw new Error("Failed to delete the theme");
     }
   }
 }

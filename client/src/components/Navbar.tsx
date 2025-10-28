@@ -9,13 +9,7 @@ export default function Navbar() {
   }
 
   return (
-    <nav
-      className="flex justify-between items-center px-8 py-4 shadow-md sticky top-0 z-10 transition-colors"
-      style={{
-        background: "var(--background)",
-        color: "var(--foreground)",
-      }}
-    >
+    <nav className="flex justify-between items-center px-8 py-4 shadow-md sticky top-0 z-10 bg-white transition-colors">
       <h2 className="text-2xl font-semibold text-[var(--primary,#2679f3)]">
         MyApp
       </h2>

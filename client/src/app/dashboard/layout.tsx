@@ -7,13 +7,14 @@ import { getProfileAPI } from "@/services/auth";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { getTextColor } from "@/utils/getTextColour";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { theme, setUser } = useThemeStore();
+  const { theme, setUser, setCustomThemes } = useThemeStore();
   const router = useRouter();
 
   const { data, isPending, isError } = useQuery({
@@ -35,8 +36,19 @@ export default function DashboardLayout({
         theme: data.theme,
         email: data.email,
       });
+      setCustomThemes(data.customThemes);
     }
   }, [data, setUser]);
+
+  useEffect(() => {
+    if (theme) {
+      document.documentElement.style.setProperty("--background", theme);
+      document.documentElement.style.setProperty(
+        "--foreground",
+        getTextColor(theme)
+      );
+    }
+  }, [theme]);
 
   if (isPending || isError) {
     return (
@@ -52,7 +64,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className={`min-h-screen theme-${theme} flex`}>
+    <div className="min-h-screen flex">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <Topbar />

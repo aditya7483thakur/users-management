@@ -17,12 +17,6 @@ import { useThemeStore } from "@/providers/store";
 import Modal from "@/components/Modal";
 import { ApiResponse, User } from "@/types/auth";
 
-const modalStyles = {
-  backgroundColor: "var(--bg)",
-  color: "var(--text)",
-  borderColor: "var(--text)",
-};
-
 export default function Page() {
   const { email: currentEmail } = useThemeStore();
 
@@ -149,7 +143,7 @@ export default function Page() {
   }
 
   return (
-    <section className="p-6 space-y-6" style={modalStyles}>
+    <section className="p-6 space-y-6">
       <div className="flex justify-between mb-4 items-center">
         <h2 className="text-3xl font-semibold tracking-tight">Users</h2>
 
@@ -157,17 +151,18 @@ export default function Page() {
           <span className="font-medium">Refresh in: {timer}s</span>
           <button
             onClick={handleManualRefresh}
-            className="px-4 py-1 rounded-lg border border-gray-400 hover:bg-gray-100 transition"
+            className="px-4 py-1 rounded-lg border border-gray-400 hover:bg-gray-100 transition hover:cursor-pointer"
+            style={{
+              backgroundColor: "var(--foreground)",
+              color: "var(--background)",
+            }}
           >
             Refresh
           </button>
         </div>
       </div>
 
-      <div
-        className="overflow-x-auto rounded-2xl shadow-md border border-opacity-20 max-h-[70vh] overflow-y-auto"
-        style={modalStyles}
-      >
+      <div className="overflow-x-auto rounded-2xl shadow-md border border-opacity-20 max-h-[70vh] overflow-y-auto">
         <table className="min-w-full text-sm">
           <thead>
             <tr
@@ -197,8 +192,8 @@ export default function Page() {
                         onClick={() => openDeleteModal(user._id)}
                         className="inline-flex items-center gap-2 text-sm font-medium border hover:cursor-pointer px-3 py-1.5 rounded-xl transition-all duration-200 hover:scale-[1.05]"
                         style={{
-                          borderColor: "var(--primary,#2679f3)",
-                          color: "var(--primary,#2679f3)",
+                          backgroundColor: "var(--foreground)",
+                          color: "var(--background)",
                         }}
                       >
                         <Trash2 size={15} />
