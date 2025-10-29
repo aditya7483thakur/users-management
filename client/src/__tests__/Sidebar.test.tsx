@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 
-// Mock next/navigation
+// ✅ Mock next/navigation
 jest.mock("next/navigation", () => ({
   usePathname: jest.fn(),
 }));
@@ -13,11 +13,10 @@ describe("Sidebar Component", () => {
     jest.clearAllMocks();
   });
 
-  it("renders all links", () => {
+  it("renders all navigation links", () => {
     (usePathname as jest.Mock).mockReturnValue("/dashboard");
     render(<Sidebar />);
 
-    // Check all link texts
     expect(screen.getByText("Home")).toBeInTheDocument();
     expect(screen.getByText("Users")).toBeInTheDocument();
   });
@@ -29,19 +28,23 @@ describe("Sidebar Component", () => {
     const homeLink = screen.getByText("Home");
     const usersLink = screen.getByText("Users");
 
-    // Active link should have bg-text / color-bg styles
+    // ✅ Active link has active inline styles
     expect(usersLink).toHaveStyle({
-      backgroundColor: "var(--text)",
-      color: "var(--bg)",
+      backgroundColor: "var(--foreground)",
+      color: "var(--background)",
     });
 
-    // Inactive link should NOT have active styles
-    expect(homeLink).not.toHaveStyle({ backgroundColor: "var(--text)" });
+    // ✅ Inactive link should NOT have same active colors
+    expect(homeLink).not.toHaveStyle({
+      backgroundColor: "var(--foreground)",
+      color: "var(--background)",
+    });
   });
 
-  it("renders Dashboard heading", () => {
+  it("renders the Dashboard heading", () => {
     (usePathname as jest.Mock).mockReturnValue("/dashboard");
     render(<Sidebar />);
+
     expect(screen.getByText("Dashboard")).toBeInTheDocument();
   });
 });

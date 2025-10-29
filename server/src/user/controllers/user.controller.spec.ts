@@ -85,6 +85,7 @@ describe('UserController', () => {
         theme: 'light',
         createdAt: new Date(),
         updatedAt: new Date(),
+        customThemes: [],
         __v: 0,
       } as Omit<User, 'passwordHash' | 'jwt'>;
       jest.spyOn(service, 'getUser').mockResolvedValue(result);

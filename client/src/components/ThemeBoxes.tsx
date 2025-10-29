@@ -30,9 +30,9 @@ export default function ThemeBoxes() {
   });
 
   const defaultThemes = [
-    { name: "light", hex: "#ffffff" },
-    { name: "dark", hex: "#000000" },
-    { name: "red", hex: "#fecaca" },
+    { name: "light", hex: "#ffffff", isCustom: false },
+    { name: "dark", hex: "#000000", isCustom: false },
+    { name: "red", hex: "#fecaca", isCustom: false },
   ];
 
   const allThemes = [...defaultThemes, ...customThemes];
@@ -58,7 +58,6 @@ export default function ThemeBoxes() {
               style={{
                 backgroundColor: t.hex,
                 color: textColor,
-                // borderColor: textColor,
               }}
             >
               {t.name}
