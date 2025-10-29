@@ -5,6 +5,10 @@ export async function sendEmail(
   subject: string,
   htmlContent: string,
 ) {
+  if (process.env.NODE_ENV === 'test') {
+    console.log(`[TEST MODE] Email sent to ${email} with subject: ${subject}`);
+    return;
+  }
   const defaultClient = SibApiV3Sdk.ApiClient.instance;
   defaultClient.authentications['api-key'].apiKey = process.env.BREVO_API_KEY;
 

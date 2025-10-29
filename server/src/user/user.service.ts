@@ -33,7 +33,9 @@ export class UserService {
     captchaAnswer: number,
   ) {
     await this.verifyCaptcha(captchaId, captchaAnswer);
+
     const existing = await this.userModel.findOne({ email });
+
     if (existing) throw new BadRequestException('Email already exists');
 
     const user = await this.userModel.create({
@@ -447,7 +449,7 @@ export class UserService {
 
     // Now data: null ONLY if we intentionally want to simulate missing data
     const dataToSend = users.length > 0 ? users : chance < 0.5 ? null : [];
-    console.log(users);
+
     return {
       ok: true,
       data: dataToSend, // array or null for gimmick
@@ -512,6 +514,13 @@ export class UserService {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
     });
 
+    if (process.env.NODE_ENV == 'test') {
+      return {
+        captchaId,
+        svg: captcha.data,
+        answer: captcha.text,
+      };
+    }
     return {
       captchaId,
       svg: captcha.data, // SVG image as string
@@ -532,7 +541,6 @@ export class UserService {
     if (record.answer !== captchaAnswer) {
       throw new BadRequestException('Captcha answer is incorrect');
     }
-
     // Delete captcha after verification to prevent reuse
     await record.deleteOne();
 

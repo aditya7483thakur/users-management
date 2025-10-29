@@ -9,8 +9,10 @@ import { UserModule } from './user/user.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ...(process.env.NODE_ENV !== 'test'
+      ? [MongooseModule.forRoot(process.env.MONGO_URI!)]
+      : []),
 
-    MongooseModule.forRoot(process.env.MONGO_URI!),
     UserModule,
   ],
   controllers: [AppController],
