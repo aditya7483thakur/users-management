@@ -14,7 +14,7 @@ export default function AddThemeButton() {
   const queryClient = useQueryClient();
   const { mutate, isPending } = useMutation({
     mutationFn: addCustomThemeAPI,
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Theme added successfully!");
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       setIsOpen(false);

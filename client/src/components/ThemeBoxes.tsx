@@ -8,7 +8,9 @@ import { getTextColor } from "@/utils/getTextColour";
 import { Trash2 } from "lucide-react";
 
 export default function ThemeBoxes() {
-  const { setUser, customThemes } = useThemeStore();
+  const setUser = useThemeStore((state) => state.setUser);
+  const customThemes = useThemeStore((state) => state.customThemes);
+
   const queryClient = useQueryClient();
 
   const changeTheme = useMutation({
@@ -71,7 +73,7 @@ export default function ThemeBoxes() {
                   changeTheme.isPending &&
                   changeTheme.variables?.theme === t.hex
                 }
-                className="flex-1 py-2 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition disabled:opacity-60"
+                className="flex-1 py-2 rounded-lg bg-blue-600 text-white font-medium hover:cursor-pointer hover:bg-blue-700 transition disabled:opacity-60"
               >
                 {changeTheme.isPending && changeTheme.variables?.theme === t.hex
                   ? "Applying..."
@@ -81,7 +83,7 @@ export default function ThemeBoxes() {
               {isCustom && (
                 <button
                   onClick={() => handleDeleteTheme(t.name)}
-                  className="ml-2 p-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+                  className="ml-2 p-2 rounded-lg bg-red-500 text-white hover:cursor-pointer hover:bg-red-600 transition"
                   title="Delete Theme"
                 >
                   <Trash2 size={18} />

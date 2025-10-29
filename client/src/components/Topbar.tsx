@@ -9,7 +9,7 @@ import { useThemeStore } from "@/providers/store";
 
 export default function Topbar() {
   const router = useRouter();
-  const { name } = useThemeStore();
+  const name = useThemeStore((state) => state.name);
   const queryClient = useQueryClient();
 
   const { isPending, mutate } = useMutation({
