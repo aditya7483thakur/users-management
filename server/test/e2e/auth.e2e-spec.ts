@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { connectInMemoryDB, clearDB, closeDB } from './setup/test-db';
@@ -26,6 +26,7 @@ describe('Auth Flow (E2E)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
 
     userModel = moduleFixture.get(getModelToken(User.name));
