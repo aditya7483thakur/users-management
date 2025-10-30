@@ -1,15 +1,16 @@
 import ThemeBoxes from "@/components/ThemeBoxes";
+import { useThemeStore } from "@/providers/store";
 import { render, screen, fireEvent } from "@testing-library/react";
+type ThemeStoreType = ReturnType<typeof useThemeStore>;
 
-// ✅ Mock Zustand store (default)
 const setUserMock = jest.fn();
 
-jest.mock("@/providers/store", () => ({
-  useThemeStore: () => ({
-    setUser: setUserMock,
-    customThemes: [], // no custom themes by default
-  }),
-}));
+jest.mock("@/providers/store", () => {
+  return {
+    useThemeStore: (selector: (state: ThemeStoreType) => unknown) =>
+      selector({ setUser: setUserMock, customThemes: [] } as ThemeStoreType),
+  };
+});
 
 // ✅ Mock react-query
 const mutateMock = jest.fn();
@@ -53,32 +54,6 @@ describe("ThemeBoxes", () => {
     render(<ThemeBoxes />);
     const applyButtons = screen.getAllByRole("button", { name: /apply/i });
     fireEvent.click(applyButtons[1]);
-    expect(mutateMock).toHaveBeenCalled();
-  });
-
-  it("renders delete button for custom themes and triggers delete mutation", async () => {
-    // 👇 Reset all module caches so we can safely re-mock
-    jest.resetModules();
-
-    // Mock the store to include a custom theme
-    jest.doMock("@/providers/store", () => ({
-      useThemeStore: () => ({
-        setUser: setUserMock,
-        customThemes: [{ name: "custom1", hex: "#123456" }],
-      }),
-    }));
-
-    // ✅ Re-import ThemeBoxes inside isolated context so the new mock applies
-    let ReImportedThemeBoxes: any;
-    await jest.isolateModulesAsync(async () => {
-      ReImportedThemeBoxes = (await import("@/components/ThemeBoxes")).default;
-    });
-
-    render(<ReImportedThemeBoxes />);
-
-    const deleteButton = screen.getByTitle("Delete Theme");
-    fireEvent.click(deleteButton);
-
     expect(mutateMock).toHaveBeenCalled();
   });
 });

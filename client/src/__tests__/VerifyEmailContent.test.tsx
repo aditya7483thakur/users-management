@@ -2,28 +2,20 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import VerifyEmailContent from "@/components/VerifyEmailContent";
 import toast from "react-hot-toast";
-import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
 
-// ✅ Mock Next.js hooks
-const mutateMock = jest.fn();
+// ✅ Mock Next.js router and search params
 const pushMock = jest.fn();
-
 jest.mock("next/navigation", () => ({
-  useSearchParams: jest.fn().mockReturnValue({
-    get: jest.fn().mockReturnValue("fake-token"), // default token
-  }),
-  useRouter: jest.fn(() => ({
-    push: pushMock,
-  })),
+  useSearchParams: jest.fn(),
+  useRouter: jest.fn(),
 }));
 
 // ✅ Mock react-query
+const mutateMock = jest.fn();
 jest.mock("@tanstack/react-query", () => ({
-  useMutation: jest.fn(() => ({
-    mutate: mutateMock,
-    isPending: false,
-    isSuccess: false,
-  })),
+  useMutation: jest.fn(),
 }));
 
 // ✅ Mock toast
@@ -38,6 +30,15 @@ jest.mock("react-hot-toast", () => ({
 describe("VerifyEmailContent", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (useRouter as jest.Mock).mockReturnValue({ push: pushMock });
+    (useSearchParams as jest.Mock).mockReturnValue({
+      get: jest.fn().mockReturnValue("fake-token"),
+    });
+    (useMutation as jest.Mock).mockReturnValue({
+      mutate: mutateMock,
+      isPending: false,
+      isSuccess: false,
+    });
   });
 
   it("renders Verify Email button", () => {
@@ -54,8 +55,7 @@ describe("VerifyEmailContent", () => {
   });
 
   it("shows error toast if token is missing", () => {
-    const { useSearchParams } = require("next/navigation");
-    useSearchParams.mockReturnValue({
+    (useSearchParams as jest.Mock).mockReturnValue({
       get: jest.fn().mockReturnValue(null),
     });
 
@@ -65,8 +65,7 @@ describe("VerifyEmailContent", () => {
   });
 
   it("shows success message when isSuccess is true", () => {
-    const { useMutation } = require("@tanstack/react-query");
-    useMutation.mockReturnValue({
+    (useMutation as jest.Mock).mockReturnValue({
       mutate: mutateMock,
       isPending: false,
       isSuccess: true,
@@ -79,22 +78,23 @@ describe("VerifyEmailContent", () => {
   });
 
   it("calls router.push('/dashboard') on success", () => {
-    const { useMutation } = require("@tanstack/react-query");
-    useMutation.mockReturnValue({
+    const onSuccessMock = jest.fn((data: { message: string }) => {
+      toast.success(data.message);
+      pushMock("/dashboard");
+    });
+
+    (useMutation as jest.Mock).mockReturnValue({
       mutate: mutateMock,
       isPending: false,
       isSuccess: false,
-      // simulate success handler being called
-      onSuccess: (data: any) => {
-        toast.success(data.message);
-        pushMock("/dashboard");
-      },
+      onSuccess: onSuccessMock,
     });
 
     render(<VerifyEmailContent />);
     fireEvent.click(screen.getByRole("button", { name: /verify email/i }));
-    // simulate mutation success manually
-    useMutation().onSuccess({ message: "Email verified successfully!" });
+
+    // manually simulate success
+    onSuccessMock({ message: "Email verified successfully!" });
 
     expect(toast.success).toHaveBeenCalledWith("Email verified successfully!");
     expect(pushMock).toHaveBeenCalledWith("/dashboard");

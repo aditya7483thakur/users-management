@@ -1,15 +1,18 @@
 // src/__tests__/Topbar.test.tsx
 import { render, screen, fireEvent } from "@testing-library/react";
 import Topbar from "@/components/Topbar";
-import toast from "react-hot-toast";
-
+import { useThemeStore } from "@/providers/store";
+type ThemeStoreType = ReturnType<typeof useThemeStore>;
 // ✅ Mock Zustand store
 const pushMock = jest.fn();
 const nameMock = "TestUser";
 
-jest.mock("@/providers/store", () => ({
-  useThemeStore: () => ({ name: nameMock }),
-}));
+jest.mock("@/providers/store", () => {
+  return {
+    useThemeStore: (selector: (state: ThemeStoreType) => unknown) =>
+      selector({ name: nameMock } as ThemeStoreType),
+  };
+});
 
 // ✅ Mock Next.js router
 jest.mock("next/navigation", () => ({

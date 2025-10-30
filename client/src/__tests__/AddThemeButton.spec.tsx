@@ -25,11 +25,21 @@ jest.mock("@tanstack/react-query", () => ({
 }));
 
 // Mock the Modal component to just render its children when open
-jest.mock("@/components/Modal", () => ({
-  __esModule: true,
-  default: ({ isOpen, children }: any) =>
-    isOpen ? <div>{children}</div> : null,
-}));
+// Mock the Modal component to just render its children when open
+jest.mock("@/components/Modal", () => {
+  interface MockModalProps {
+    isOpen: boolean;
+    children: React.ReactNode;
+  }
+
+  const MockModal = ({ isOpen, children }: MockModalProps) =>
+    isOpen ? <div>{children}</div> : null;
+
+  return {
+    __esModule: true,
+    default: MockModal,
+  };
+});
 
 // Mock schema to make validation deterministic
 jest.mock("@/lib/schemas", () => ({
