@@ -14,6 +14,7 @@ import { TokenType } from 'src/enums/auth.enums';
 import { sendEmail } from 'src/utils/sendEmail';
 import { ThemeService } from '../theme/theme.service';
 import { JwtService } from '@nestjs/jwt';
+import { Token, TokenDocument } from './schemas/token.schema';
 
 @Injectable()
 export class AuthService {
@@ -34,6 +35,24 @@ export class AuthService {
     answer?: number;
   }) {
     return this.tokenRepository.create(data);
+  }
+
+  async deleteToken(id: string) {
+    return this.tokenRepository.deleteToken(id);
+  }
+
+  async findValidToken(
+    token: string,
+    allowedTypes: TokenType[],
+  ): Promise<TokenDocument> {
+    const record = await this.tokenRepository.findValidToken(
+      token,
+      allowedTypes,
+    );
+    if (!record) {
+      throw new BadRequestException('Invalid or expired token');
+    }
+    return record as TokenDocument;
   }
 
   // -------------------------

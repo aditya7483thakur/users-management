@@ -10,11 +10,16 @@ import {
 import { RegisterDto } from './dto/register.dto';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { changePasswordDto } from './dto/change-password.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
   // Register user → sends email verification link
+  @Public()
   @Post('register')
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(
@@ -26,12 +31,16 @@ export class AuthController {
   }
 
   // Forgot Password → sends reset email
+
+  @Public()
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.forgotPassword(dto.email);
   }
 
   // Set Password → handles both first-time verification & password reset
+
+  @Public()
   @Post('set-password')
   async setPassword(
     @Query('token') token: string,
@@ -57,6 +66,8 @@ export class AuthController {
   }
 
   // Login
+
+  @Public()
   @Post('login')
   async login(@Body() dto: LoginDto) {
     return this.authService.login(
@@ -67,6 +78,7 @@ export class AuthController {
     );
   }
 
+  @Public()
   @Get('captcha')
   async getCaptcha(@Request() req) {
     return this.authService.generateCaptcha();

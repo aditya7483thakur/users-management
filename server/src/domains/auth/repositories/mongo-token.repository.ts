@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from 'src/common/infra/mongo.repository';
-import { Token } from '../schemas/token.schema';
+import { Token, TokenDocument } from '../schemas/token.schema';
 import { TokenRepository } from '../interfaces/token.repository';
 import { TokenType } from 'src/enums/auth.enums';
 
@@ -20,7 +20,7 @@ export class TokenMongoRepository
   async findValidToken(
     token: string,
     types: TokenType[],
-  ): Promise<Token | null> {
+  ): Promise<TokenDocument | null> {
     return this.tokenModel.findOne({
       token,
       type: { $in: types },

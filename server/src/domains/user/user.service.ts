@@ -8,10 +8,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { sendEmail } from 'src/utils/sendEmail';
 import { TokenType } from 'src/enums/auth.enums';
 import { v4 as uuidv4 } from 'uuid';
-import { User, UserDocument } from './schemas/user.schema';
-import { InjectModel } from '@nestjs/mongoose';
-import { JwtService } from '@nestjs/jwt';
-import { Model, Types } from 'mongoose';
+import { User } from './schemas/user.schema';
 import type { UserRepository } from './interfaces/user.repository';
 import { AuthService } from '../auth/auth.service';
 
@@ -27,15 +24,6 @@ export class UserService {
   // -------------------------
   // Get user profile
   // -------------------------
-  // async getUser(userId: string) {
-  //   const user = await this.userModel
-  //     .findById(userId)
-  //     .select('-passwordHash -jwt')
-  //     .lean<Omit<User, 'passwordHash' | 'jwt'>>();
-  //   if (!user) throw new NotFoundException('User not found');
-  //   return user;
-  // }
-
   async getUser(userId: string) {
     const user = await this.userRepository.findById(userId);
     if (!user) throw new NotFoundException('User not found');
@@ -79,13 +67,13 @@ export class UserService {
       const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
       // Store verification token
-      // await this.tokenRepository.create({
-      //   user: userId,
-      //   token,
-      //   type: TokenType.EMAIL_UPDATE,
-      //   newEmail: dto.email,
-      //   expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-      // });
+      await this.authService.createToken({
+        user: userId,
+        token,
+        type: TokenType.EMAIL_UPDATE,
+        newEmail: dto.email,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
+      });
 
       // Send verification email
       await sendEmail(
@@ -164,11 +152,9 @@ export class UserService {
   // -------------------------
   async verifyEmailUpdate(token: string) {
     // 1️⃣ Find the token record for EMAIL_UPDATE
-    const record = await this.authService.createToken({
-      user: user._id,
-      token,
-      type: TokenType.EMAIL_UPDATE,
-    });
+    const record = await this.authService.findValidToken(token, [
+      TokenType.EMAIL_UPDATE,
+    ]);
 
     if (!record) {
       throw new BadRequestException('Invalid or expired token');
@@ -193,10 +179,12 @@ export class UserService {
     }
 
     // 5️⃣ Update the user's email
-    // await this.userRepository.update(user._id.toString(), { email: newEmail });
+    await this.userRepository.update(record.user.toString(), {
+      email: newEmail,
+    });
 
     // 6️⃣ Delete the used token
-    // await this.tokenRepository.deleteById(record._id.toString());
+    await this.authService.deleteToken(record._id.toString());
 
     return { message: 'Email updated successfully', ok: true };
   }
