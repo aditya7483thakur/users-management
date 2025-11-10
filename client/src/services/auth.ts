@@ -9,6 +9,7 @@ import {
   RegisterData,
   SetPasswordData,
   UpdateProfileData,
+  User,
 } from "@/types/auth";
 import axiosInstance from "@/utils/axiosInstance";
 

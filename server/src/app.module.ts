@@ -4,7 +4,11 @@ import { AppService } from './app.service';
 import { InjectConnection, MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { Connection } from 'mongoose';
-import { UserModule } from './user/user.module';
+import { UserModule } from './domains/user/user.module';
+import { ThemeModule } from './domains/theme/theme.module';
+import { JwtStrategy } from './common/strategy/jwt.strategy';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -14,9 +18,17 @@ import { UserModule } from './user/user.module';
       : []),
 
     UserModule,
+    ThemeModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    JwtStrategy,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule implements OnModuleInit {
   private readonly logger = new Logger(AppModule.name);

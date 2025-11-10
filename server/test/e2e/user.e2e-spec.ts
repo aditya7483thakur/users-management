@@ -5,8 +5,8 @@ import { AppModule } from '../../src/app.module';
 import { disconnect } from 'mongoose';
 import { clearDB, closeDB, connectInMemoryDB } from './setup/test-db';
 import { getModelToken, MongooseModule } from '@nestjs/mongoose';
-import { User } from 'src/user/schemas/user.schema';
-import { Token } from 'src/user/schemas/token.schema';
+import { User } from 'src/domains/user/schemas/user.schema';
+import { Token } from 'src/domains/user/schemas/token.schema';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
