@@ -2,7 +2,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { User } from 'src/domains/user/schemas/user.schema';
 import { UserRepository } from '../interfaces/user.repository';
-import { MongoRepository } from 'src/common/infra/mongo.repository';
+import { MongoRepository } from 'src/infra/database/mongo.repository';
 export class UserMongoRepository
   extends MongoRepository<User>
   implements UserRepository

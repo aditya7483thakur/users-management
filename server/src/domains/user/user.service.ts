@@ -10,15 +10,14 @@ import { TokenType } from 'src/enums/auth.enums';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from './schemas/user.schema';
 import type { UserRepository } from './interfaces/user.repository';
-import { AuthService } from '../auth/auth.service';
+import { TokenService } from '../token/token.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject('USER_REPOSITORY')
     private readonly userRepository: UserRepository,
-    private readonly authService: AuthService,
-    // private jwtService: JwtService,
+    private readonly tokenService: TokenService,
   ) {}
 
   // -------------------------
@@ -67,7 +66,7 @@ export class UserService {
       const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
 
       // Store verification token
-      await this.authService.createToken({
+      await this.tokenService.createToken({
         user: userId,
         token,
         type: TokenType.EMAIL_UPDATE,
@@ -152,9 +151,9 @@ export class UserService {
   // -------------------------
   async verifyEmailUpdate(token: string) {
     // 1️⃣ Find the token record for EMAIL_UPDATE
-    const record = await this.authService.findValidToken(token, [
+    const record = (await this.tokenService.findValidToken(token, [
       TokenType.EMAIL_UPDATE,
-    ]);
+    ])) as any;
 
     if (!record) {
       throw new BadRequestException('Invalid or expired token');
@@ -184,7 +183,7 @@ export class UserService {
     });
 
     // 6️⃣ Delete the used token
-    await this.authService.deleteToken(record._id.toString());
+    await this.tokenService.deleteToken(record._id.toString());
 
     return { message: 'Email updated successfully', ok: true };
   }
@@ -214,7 +213,7 @@ export class UserService {
     // Determine nextCursor if there's more data
     let nextCursor: string | undefined = undefined;
     if (users.length > limit) {
-      const nextUser = users.pop();
+      const nextUser = users.pop() as any;
       nextCursor = nextUser?._id?.toString();
     }
 

@@ -2,20 +2,18 @@ import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './schemas/user.schema';
-import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserController } from './user.controller';
 import { UserMongoRepository } from './repositories/mongo-user.repository';
-import { AuthModule } from '../auth/auth.module';
+import { TokenModule } from '../token/token.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    AuthModule,
+    TokenModule,
   ],
   providers: [
     UserService,
-
-    { provide: 'USER_REPOSITORY', useExisting: UserMongoRepository },
+    UserMongoRepository,
+    { provide: 'USER_REPOSITORY', useClass: UserMongoRepository },
   ],
   controllers: [UserController],
   exports: [UserService],

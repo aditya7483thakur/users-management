@@ -1,5 +1,5 @@
 import { Token } from '../schemas/token.schema';
-import { BaseRepository } from 'src/common/base.repository';
+import { BaseRepository } from 'src/infra/base.repository';
 import { TokenType } from 'src/enums/auth.enums';
 export interface TokenRepository extends BaseRepository<Token> {
   findValidToken(token: string, types: TokenType[]): Promise<Token | null>;

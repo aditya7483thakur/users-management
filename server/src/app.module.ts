@@ -6,9 +6,8 @@ import { ConfigModule } from '@nestjs/config';
 import { Connection } from 'mongoose';
 import { UserModule } from './domains/user/user.module';
 import { ThemeModule } from './domains/theme/theme.module';
-import { JwtStrategy } from './common/strategy/jwt.strategy';
-import { APP_GUARD } from '@nestjs/core';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { AuthModule } from './domains/auth/auth.module';
+import { TokenModule } from './domains/token/token.module';
 
 @Module({
   imports: [
@@ -19,16 +18,11 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 
     UserModule,
     ThemeModule,
+    AuthModule,
+    TokenModule,
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    JwtStrategy,
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule implements OnModuleInit {
   private readonly logger = new Logger(AppModule.name);

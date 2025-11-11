@@ -1,5 +1,5 @@
 // src/domains/user/repositories/user.repository.ts
-import { BaseRepository } from 'src/common/base.repository';
+import { BaseRepository } from 'src/infra/base.repository';
 import { User } from '../schemas/user.schema';
 
 export interface UserRepository extends BaseRepository<User> {

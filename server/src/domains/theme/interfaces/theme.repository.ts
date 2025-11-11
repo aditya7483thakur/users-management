@@ -1,4 +1,4 @@
-import { BaseRepository } from 'src/common/base.repository';
+import { BaseRepository } from 'src/infra/base.repository';
 import { Theme } from '../schemas/theme.schema';
 
 export interface ThemeRepository extends BaseRepository<Theme> {

@@ -7,53 +7,22 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import svgCaptcha from 'svg-captcha';
-import type { TokenRepository } from './interfaces/token.repository';
 import { UserService } from '../user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 import { TokenType } from 'src/enums/auth.enums';
 import { sendEmail } from 'src/utils/sendEmail';
 import { ThemeService } from '../theme/theme.service';
 import { JwtService } from '@nestjs/jwt';
-import { Token, TokenDocument } from './schemas/token.schema';
+import { TokenService } from '../token/token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject('TOKEN_REPOSITORY')
-    private readonly tokenRepository: TokenRepository,
+    private readonly tokenService: TokenService,
     private readonly userService: UserService,
     private readonly themeService: ThemeService,
     private readonly jwtService: JwtService,
   ) {}
-
-  async createToken(data: {
-    user: string;
-    token: string;
-    type: TokenType;
-    expiresAt?: Date;
-    newEmail?: string;
-    answer?: number;
-  }) {
-    return this.tokenRepository.create(data);
-  }
-
-  async deleteToken(id: string) {
-    return this.tokenRepository.deleteToken(id);
-  }
-
-  async findValidToken(
-    token: string,
-    allowedTypes: TokenType[],
-  ): Promise<TokenDocument> {
-    const record = await this.tokenRepository.findValidToken(
-      token,
-      allowedTypes,
-    );
-    if (!record) {
-      throw new BadRequestException('Invalid or expired token');
-    }
-    return record as TokenDocument;
-  }
 
   // -------------------------
   // Register user & send verification email
@@ -69,15 +38,15 @@ export class AuthService {
     const existingUser = await this.userService.findByEmail(email);
     if (existingUser) throw new BadRequestException('Email already exists');
 
-    const user = await this.userService.create({
+    const user = (await this.userService.create({
       name,
       email,
       isVerified: false,
-    });
+    })) as any;
 
     // Generate verification token
     const token = uuidv4();
-    await this.tokenRepository.create({
+    await this.tokenService.createToken({
       user: user._id,
       token,
       type: TokenType.EMAIL_VERIFICATION,
@@ -118,7 +87,7 @@ export class AuthService {
     captchaAnswer: number,
   ) {
     await this.verifyCaptcha(captchaId, captchaAnswer);
-    const user = await this.userService.findByEmail(email);
+    const user = (await this.userService.findByEmail(email)) as any;
     if (!user || !user.isVerified)
       throw new UnauthorizedException('Invalid credentials');
 
@@ -156,11 +125,11 @@ export class AuthService {
   // Forgot password → send reset email
   // -------------------------
   async forgotPassword(email: string) {
-    const user = await this.userService.findByEmail(email);
+    const user = (await this.userService.findByEmail(email)) as any;
     if (!user) throw new NotFoundException('User not found');
 
     const token = uuidv4();
-    await this.tokenRepository.create({
+    await this.tokenService.createToken({
       user: user._id,
       token,
       type: TokenType.PASSWORD_RESET,
@@ -211,14 +180,14 @@ export class AuthService {
     }
 
     // 🔹 Find the token (EMAIL_VERIFICATION or PASSWORD_RESET)
-    const record = await this.tokenRepository.findValidToken(token, [
+    const record = (await this.tokenService.findValidToken(token, [
       TokenType.EMAIL_VERIFICATION,
       TokenType.PASSWORD_RESET,
-    ]);
+    ])) as any;
     if (!record) throw new BadRequestException('Invalid or expired token');
 
     // 🔹 Find the user
-    const user = await this.userService.findById(record.user);
+    const user = (await this.userService.findById(record.user)) as any;
     if (!user) throw new NotFoundException('User not found');
 
     // 🔹 Check if new password is same as old password
@@ -236,7 +205,7 @@ export class AuthService {
 
     if (record.type === TokenType.EMAIL_VERIFICATION && !user.isVerified) {
       // 1️⃣ Create default theme
-      const theme = await this.themeService.createDefaultTheme();
+      const theme = (await this.themeService.createDefaultTheme()) as any;
 
       // 2️⃣ Update user with theme reference
       await this.userService.update(user._id, {
@@ -255,7 +224,7 @@ export class AuthService {
       });
     }
 
-    await this.tokenRepository.deleteToken(record._id);
+    await this.tokenService.deleteToken(record._id);
     return { message: 'Password set successfully', ok: true };
   }
 
@@ -329,10 +298,10 @@ export class AuthService {
 
     const captchaId = uuidv4();
 
-    await this.tokenRepository.create({
+    await this.tokenService.createToken({
       token: captchaId,
       type: TokenType.CAPTCHA,
-      answer: captcha.text, // math result
+      answer: Number(captcha.text), // math result
       user: null,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
     });
@@ -354,9 +323,9 @@ export class AuthService {
   // Verify Captcha
   // -------------------------
   async verifyCaptcha(captchaId: string, captchaAnswer: number) {
-    const record = await this.tokenRepository.findValidToken(captchaId, [
+    const record = (await this.tokenService.findValidToken(captchaId, [
       TokenType.CAPTCHA,
-    ]);
+    ])) as any;
 
     if (!record) throw new BadRequestException('Invalid or expired captcha');
 
@@ -364,7 +333,7 @@ export class AuthService {
       throw new BadRequestException('Captcha answer is incorrect');
     }
     // Delete captcha after verification to prevent reuse
-    await this.tokenRepository.deleteToken(record._id);
+    await this.tokenService.deleteToken(record._id);
 
     return true;
   }
