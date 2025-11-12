@@ -35,7 +35,7 @@ export class User {
   @Prop({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Theme',
-    required: true,
+    required: false,
   })
   themeRef: string;
 

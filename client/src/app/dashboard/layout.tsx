@@ -33,10 +33,10 @@ export default function DashboardLayout({
     if (data) {
       setUser({
         name: data.name,
-        theme: data.theme,
+        theme: data.themeRef.theme,
         email: data.email,
       });
-      setCustomThemes(data.customThemes);
+      setCustomThemes(data.themeRef.customThemes);
     }
   }, [data, setUser]);
 

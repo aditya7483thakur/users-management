@@ -19,18 +19,22 @@ export class ThemeController {
   // Change theme
   @Patch('change')
   async changeTheme(@Request() req, @Body() dto: ChangeThemeDto) {
-    return this.themeService.changeTheme(req.user.sub, dto.theme);
+    return this.themeService.changeTheme(req.user.themeId, dto.theme);
   }
 
   // add custom theme
   @Post('add-custom-theme')
   async addCustomTheme(@Request() req, @Body() dto: AddCustomThemeDto) {
-    return this.themeService.addCustomTheme(req.user.sub, dto.name, dto.hex);
+    return this.themeService.addCustomTheme(
+      req.user.themeId,
+      dto.name,
+      dto.hex,
+    );
   }
 
   // Change theme
   @Delete('delete-custom-theme')
   async deleteTheme(@Request() req, @Body() dto: DeleteCustomThemeDto) {
-    return this.themeService.deleteCustomTheme(req.user.sub, dto.name);
+    return this.themeService.deleteCustomTheme(req.user.themeId, dto.name);
   }
 }

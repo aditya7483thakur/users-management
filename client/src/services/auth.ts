@@ -58,7 +58,7 @@ export async function loginUserAPI(data: LoginData) {
 // Forgot Password
 export async function forgotPasswordAPI(data: ForgotPasswordData) {
   try {
-    const res = await axiosInstance.post("/user/forgot-password", data);
+    const res = await axiosInstance.post("/auth/forgot-password", data);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -77,7 +77,7 @@ export async function setPasswordAPI(data: SetPasswordData) {
     const encodedPassword = btoa(data.password);
     const encodedConfirmPassword = btoa(data.confirmPassword);
     const res = await axiosInstance.post(
-      `/user/set-password?token=${data.token}`,
+      `/auth/set-password?token=${data.token}`,
       {
         password: encodedPassword,
         confirmPassword: encodedConfirmPassword,
@@ -172,7 +172,7 @@ export async function updatePasswordAPI(data: ChangePasswordData) {
       confirmPassword: btoa(data.confirmPassword),
     };
 
-    const res = await axiosInstance.patch("/user/update-password", encodedData);
+    const res = await axiosInstance.patch("/auth/update-password", encodedData);
     return res.data;
   } catch (err) {
     if (axios.isAxiosError(err)) {

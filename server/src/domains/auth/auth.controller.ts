@@ -79,7 +79,7 @@ export class AuthController {
   }
 
   @Public()
-  @Get('captcha')
+  @Get('generate-captcha')
   async getCaptcha(@Request() req) {
     return this.authService.generateCaptcha();
   }

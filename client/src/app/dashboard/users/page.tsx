@@ -51,6 +51,7 @@ export default function Page() {
       .filter((page) => page.data) // only keep pages with data
       .flatMap((page) => page.data!) ?? [];
 
+  console.log("all", getAllUsersQuery.data);
   // Delete user mutation
   const deleteUserMutate = useMutation({
     mutationFn: deleteUserAPI,

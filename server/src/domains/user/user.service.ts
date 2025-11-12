@@ -24,7 +24,7 @@ export class UserService {
   // Get user profile
   // -------------------------
   async getUser(userId: string) {
-    const user = await this.userRepository.findById(userId);
+    const user = await this.userRepository.findByIdWithTheme(userId);
     if (!user) throw new NotFoundException('User not found');
 
     // Remove sensitive fields

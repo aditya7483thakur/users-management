@@ -21,6 +21,14 @@ export class UserMongoRepository
       .select('-passwordHash -jwt')
       .sort({ _id: 1 })
       .limit(limit)
-      .exec();
+      .lean();
+  }
+
+  async findByIdWithTheme(userId: string): Promise<User | null> {
+    return this.userModel
+      .findById(userId)
+      .populate('themeRef')
+      .select('-passwordHash -jwt')
+      .lean();
   }
 }
