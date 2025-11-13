@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   Patch,
   Post,
   Query,
@@ -22,12 +24,26 @@ export class AuthController {
   @Public()
   @Post('register')
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(
-      dto.name,
-      dto.email,
-      dto.captchaId,
-      dto.captchaAnswer,
-    );
+    try {
+      const user = await this.authService.register(
+        dto.name,
+        dto.email,
+        dto.captchaId,
+        dto.captchaAnswer,
+      );
+      return user;
+    } catch (error) {
+      console.error('Error during registration:', error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        'Failed to register user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   // Forgot Password → sends reset email
@@ -35,7 +51,21 @@ export class AuthController {
   @Public()
   @Post('forgot-password')
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
-    return this.authService.forgotPassword(dto.email);
+    try {
+      const response = await this.authService.forgotPassword(dto.email);
+      return response;
+    } catch (error) {
+      console.error('Error during forgot-password:', error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        'Failed to process forgot password request',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   // Set Password → handles both first-time verification & password reset
@@ -46,23 +76,51 @@ export class AuthController {
     @Query('token') token: string,
     @Body() dto: ResetPasswordDto,
   ) {
-    return this.authService.setPassword(
-      token,
-      dto.password,
-      dto.confirmPassword,
-    );
+    try {
+      const result = await this.authService.setPassword(
+        token,
+        dto.password,
+        dto.confirmPassword,
+      );
+      return result;
+    } catch (error) {
+      console.error('Error during set-password:', error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        'Failed to set password',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Patch('update-password')
   async changePassword(@Request() req, @Body() dto: changePasswordDto) {
-    const currentToken = req.user.jti;
-    return this.authService.changePassword(
-      req.user.sub,
-      dto.oldPassword,
-      dto.newPassword,
-      dto.confirmPassword,
-      currentToken,
-    );
+    try {
+      const currentToken = req.user.jti;
+      const result = await this.authService.changePassword(
+        req.user.sub,
+        dto.oldPassword,
+        dto.newPassword,
+        dto.confirmPassword,
+        currentToken,
+      );
+      return result;
+    } catch (error) {
+      console.error('Error updating password:', error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        'Failed to update password',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   // Login
@@ -70,26 +128,65 @@ export class AuthController {
   @Public()
   @Post('login')
   async login(@Body() dto: LoginDto) {
-    return this.authService.login(
-      dto.email,
-      dto.password,
-      dto.captchaId,
-      dto.captchaAnswer,
-    );
+    try {
+      const result = await this.authService.login(
+        dto.email,
+        dto.password,
+        dto.captchaId,
+        dto.captchaAnswer,
+      );
+      return result;
+    } catch (error) {
+      console.error('Error during login:', error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException('Login failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Public()
   @Get('generate-captcha')
   async getCaptcha(@Request() req) {
-    return this.authService.generateCaptcha();
+    try {
+      const captcha = await this.authService.generateCaptcha();
+      return captcha;
+    } catch (error) {
+      console.error('Error generating captcha:', error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        'Failed to generate captcha',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   // Logout
   @Patch('logout')
   async logout(@Request() req) {
-    const userId = req.user.sub;
-    const currentToken = req.user.jti;
+    try {
+      const userId = req.user.sub;
+      const currentToken = req.user.jti;
 
-    return this.authService.logout(userId, currentToken);
+      const result = await this.authService.logout(userId, currentToken);
+      return result;
+    } catch (error) {
+      console.error('Error during logout:', error);
+
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
+      throw new HttpException(
+        'Failed to logout',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

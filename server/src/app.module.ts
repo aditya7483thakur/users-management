@@ -8,13 +8,18 @@ import { UserModule } from './domains/user/user.module';
 import { ThemeModule } from './domains/theme/theme.module';
 import { AuthModule } from './domains/auth/auth.module';
 import { TokenModule } from './domains/token/token.module';
+import { AppConfigModule } from './config/config.module';
+import { AppConfigService } from './config/config.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
-    ...(process.env.NODE_ENV !== 'test'
-      ? [MongooseModule.forRoot(process.env.MONGO_URI!)]
-      : []),
+    MongooseModule.forRootAsync({
+      imports: [AppConfigModule],
+      inject: [AppConfigService],
+      useFactory: (config: AppConfigService) => ({
+        uri: config.mongoUri,
+      }),
+    }),
 
     UserModule,
     ThemeModule,

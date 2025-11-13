@@ -5,12 +5,13 @@ import {
   Inject,
 } from '@nestjs/common';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { sendEmail } from 'src/utils/sendEmail';
 import { TokenType } from 'src/enums/auth.enums';
 import { v4 as uuidv4 } from 'uuid';
 import { User } from './schemas/user.schema';
 import type { UserRepository } from './interfaces/user.repository';
 import { TokenService } from '../token/token.service';
+import { EmailService } from '../email/email.service';
+import { AppConfigService } from 'src/config/config.service';
 
 @Injectable()
 export class UserService {
@@ -18,6 +19,8 @@ export class UserService {
     @Inject('USER_REPOSITORY')
     private readonly userRepository: UserRepository,
     private readonly tokenService: TokenService,
+    private readonly emailService: EmailService,
+    private readonly appConfigService: AppConfigService,
   ) {}
 
   // -------------------------
@@ -63,7 +66,7 @@ export class UserService {
       if (existing) throw new BadRequestException('Email already in use');
 
       const token = uuidv4();
-      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+      const verificationUrl = `${this.appConfigService.frontendUrl}/verify-email?token=${token}`;
 
       // Store verification token
       await this.tokenService.createToken({
@@ -75,7 +78,8 @@ export class UserService {
       });
 
       // Send verification email
-      await sendEmail(
+
+      await this.emailService.sendEmail(
         dto.email,
         'Confirm your new email',
         `
@@ -97,7 +101,6 @@ export class UserService {
           <p>After confirmation, log in next time with your new email.</p>
         `,
       );
-
       emailVerificationTriggered = true;
     }
 

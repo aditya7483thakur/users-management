@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -10,10 +9,11 @@ import svgCaptcha from 'svg-captcha';
 import { UserService } from '../user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 import { TokenType } from 'src/enums/auth.enums';
-import { sendEmail } from 'src/utils/sendEmail';
 import { ThemeService } from '../theme/theme.service';
 import { JwtService } from '@nestjs/jwt';
 import { TokenService } from '../token/token.service';
+import { EmailService } from '../email/email.service';
+import { AppConfigService } from 'src/config/config.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +22,8 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly themeService: ThemeService,
     private readonly jwtService: JwtService,
+    private readonly emailService: EmailService,
+    private readonly appConfigService: AppConfigService,
   ) {}
 
   // -------------------------
@@ -52,8 +54,9 @@ export class AuthService {
       type: TokenType.EMAIL_VERIFICATION,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
     });
-    const verificationLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
-    await sendEmail(
+    const verificationLink = `${this.appConfigService.frontendUrl}/set-password?token=${token}`;
+
+    await this.emailService.sendEmail(
       user.email,
       'Complete Your Registration - Set Your Password',
       `
@@ -136,9 +139,8 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1h expiry
     });
 
-    const resetLink = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
-
-    await sendEmail(
+    const resetLink = `${this.appConfigService.frontendUrl}/set-password?token=${token}`;
+    await this.emailService.sendEmail(
       user.email,
       'Reset Your Password',
       `
@@ -159,7 +161,6 @@ export class AuthService {
       <p>If you did not request a password reset, you can safely ignore this email.</p>
     `,
     );
-
     return { message: 'Password reset email sent', ok: true };
   }
 
@@ -306,7 +307,7 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
     });
 
-    if (process.env.NODE_ENV == 'test') {
+    if (this.appConfigService.nodeEnv == 'test') {
       return {
         captchaId,
         svg: captcha.data,
