@@ -24,7 +24,7 @@ export class EmailService {
     }
 
     try {
-      await this.apiInstance.sendTransacEmail({
+      const req = await this.apiInstance.sendTransacEmail({
         to: [{ email }],
         sender: {
           name: 'Control Panel',

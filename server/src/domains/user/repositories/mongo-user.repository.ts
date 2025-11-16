@@ -1,34 +1,37 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { User } from 'src/domains/user/schemas/user.schema';
+import { User, UserDocument } from 'src/domains/user/schemas/user.schema';
 import { UserRepository } from '../interfaces/user.repository';
 import { MongoRepository } from 'src/infra/database/mongo.repository';
 export class UserMongoRepository
-  extends MongoRepository<User>
+  extends MongoRepository<UserDocument>
   implements UserRepository
 {
-  constructor(@InjectModel(User.name) private readonly userModel: Model<User>) {
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
+  ) {
     super(userModel);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.userModel.findOne({ email }).lean();
+  async findByEmail(email: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ email });
   }
 
-  async findAllWithPagination(filter: any, limit: number): Promise<User[]> {
+  async findAllWithPagination(
+    filter: any,
+    limit: number,
+  ): Promise<UserDocument[]> {
     return this.model
       .find(filter)
       .select('-passwordHash -jwt')
       .sort({ _id: 1 })
-      .limit(limit)
-      .lean();
+      .limit(limit);
   }
 
-  async findByIdWithTheme(userId: string): Promise<User | null> {
+  async findByIdWithTheme(userId: string): Promise<UserDocument | null> {
     return this.userModel
       .findById(userId)
       .populate('themeRef')
-      .select('-passwordHash -jwt')
-      .lean();
+      .select('-passwordHash -jwt');
   }
 }

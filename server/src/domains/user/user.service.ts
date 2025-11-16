@@ -7,11 +7,12 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { TokenType } from 'src/enums/auth.enums';
 import { v4 as uuidv4 } from 'uuid';
-import { User } from './schemas/user.schema';
+import { User, UserDocument } from './schemas/user.schema';
 import type { UserRepository } from './interfaces/user.repository';
 import { TokenService } from '../token/token.service';
 import { EmailService } from '../email/email.service';
 import { AppConfigService } from 'src/config/config.service';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class UserService {
@@ -29,9 +30,10 @@ export class UserService {
   async getUser(userId: string) {
     const user = await this.userRepository.findByIdWithTheme(userId);
     if (!user) throw new NotFoundException('User not found');
+    const plainUser = user.toObject();
 
     // Remove sensitive fields
-    const { passwordHash, jwt, ...safeUser } = user;
+    const { passwordHash, jwt, ...safeUser } = plainUser;
     return safeUser;
   }
 
@@ -70,7 +72,7 @@ export class UserService {
 
       // Store verification token
       await this.tokenService.createToken({
-        user: userId,
+        user: new Types.ObjectId(userId),
         token,
         type: TokenType.EMAIL_UPDATE,
         newEmail: dto.email,
@@ -142,11 +144,11 @@ export class UserService {
     return this.userRepository.findById(id);
   }
 
-  async create(data: Partial<User>) {
+  async create(data: Partial<UserDocument>) {
     return this.userRepository.create(data);
   }
 
-  async update(id: string, data: Partial<User>) {
+  async update(id: string, data: Partial<UserDocument>) {
     return this.userRepository.update(id, data);
   }
   // -------------------------
@@ -154,16 +156,21 @@ export class UserService {
   // -------------------------
   async verifyEmailUpdate(token: string) {
     // 1️⃣ Find the token record for EMAIL_UPDATE
-    const record = (await this.tokenService.findValidToken(token, [
+    const record = await this.tokenService.findValidToken(token, [
       TokenType.EMAIL_UPDATE,
-    ])) as any;
+    ]);
 
     if (!record) {
       throw new BadRequestException('Invalid or expired token');
     }
 
+    const userId = record.user?.toString();
+    if (!userId) {
+      throw new BadRequestException('User not found for this token');
+    }
+
     // 2️⃣ Fetch the associated user
-    const user = await this.userRepository.findById(record.user.toString());
+    const user = await this.userRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
@@ -180,8 +187,12 @@ export class UserService {
       throw new BadRequestException('Email already in use');
     }
 
+    const newUserId = record.user?.toString();
+    if (!newUserId) {
+      throw new BadRequestException('User not found for this token');
+    }
     // 5️⃣ Update the user's email
-    await this.userRepository.update(record.user.toString(), {
+    await this.userRepository.update(newUserId, {
       email: newEmail,
     });
 
@@ -203,7 +214,7 @@ export class UserService {
       filter._id = { $gt: cursor }; // your repository should internally handle ObjectId conversion
     }
 
-    let users: User[] = [];
+    let users: UserDocument[] = [];
 
     // Simulate "chance" skipping, as in your original implementation
     if (chance >= 0.5) {
@@ -216,14 +227,17 @@ export class UserService {
     // Determine nextCursor if there's more data
     let nextCursor: string | undefined = undefined;
     if (users.length > limit) {
-      const nextUser = users.pop() as any;
+      const nextUser = users.pop();
       nextCursor = nextUser?._id?.toString();
     }
 
     // Remove sensitive fields from every user
-    const sanitizedUsers = users.map(
-      ({ passwordHash, jwt, ...safeUser }) => safeUser,
-    );
+    const sanitizedUsers = users.map((user) => {
+      const plainUser =
+        typeof user.toObject === 'function' ? user.toObject() : user;
+      const { passwordHash, jwt, ...safeUser } = plainUser;
+      return safeUser;
+    });
 
     // Simulate "data missing" logic for testing
     const dataToSend =

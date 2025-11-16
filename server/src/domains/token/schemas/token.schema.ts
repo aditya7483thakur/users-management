@@ -2,15 +2,16 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { TokenType } from 'src/enums/auth.enums';
 
-export type TokenDocument = Token & Document;
+export type TokenDocument = Token & Document & { _id: string };
 
 @Schema({ timestamps: true })
 export class Token {
   @Prop({
     type: Types.ObjectId,
     ref: 'User',
+    required: false,
   })
-  user: Types.ObjectId;
+  user?: Types.ObjectId;
 
   @Prop({
     required: true,

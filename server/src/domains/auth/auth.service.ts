@@ -14,6 +14,7 @@ import { JwtService } from '@nestjs/jwt';
 import { TokenService } from '../token/token.service';
 import { EmailService } from '../email/email.service';
 import { AppConfigService } from 'src/config/config.service';
+import { ObjectId, Types } from 'mongoose';
 
 @Injectable()
 export class AuthService {
@@ -40,16 +41,16 @@ export class AuthService {
     const existingUser = await this.userService.findByEmail(email);
     if (existingUser) throw new BadRequestException('Email already exists');
 
-    const user = (await this.userService.create({
+    const user = await this.userService.create({
       name,
       email,
       isVerified: false,
-    })) as any;
+    });
 
     // Generate verification token
     const token = uuidv4();
     await this.tokenService.createToken({
-      user: user._id,
+      user: new Types.ObjectId(user._id),
       token,
       type: TokenType.EMAIL_VERIFICATION,
       expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h expiry
@@ -90,7 +91,7 @@ export class AuthService {
     captchaAnswer: number,
   ) {
     await this.verifyCaptcha(captchaId, captchaAnswer);
-    const user = (await this.userService.findByEmail(email)) as any;
+    const user = await this.userService.findByEmail(email);
     if (!user || !user.isVerified)
       throw new UnauthorizedException('Invalid credentials');
 
@@ -128,12 +129,12 @@ export class AuthService {
   // Forgot password → send reset email
   // -------------------------
   async forgotPassword(email: string) {
-    const user = (await this.userService.findByEmail(email)) as any;
+    const user = await this.userService.findByEmail(email);
     if (!user) throw new NotFoundException('User not found');
 
     const token = uuidv4();
     await this.tokenService.createToken({
-      user: user._id,
+      user: new Types.ObjectId(user._id),
       token,
       type: TokenType.PASSWORD_RESET,
       expiresAt: new Date(Date.now() + 1 * 60 * 60 * 1000), // 1h expiry
@@ -181,14 +182,17 @@ export class AuthService {
     }
 
     // 🔹 Find the token (EMAIL_VERIFICATION or PASSWORD_RESET)
-    const record = (await this.tokenService.findValidToken(token, [
+    const record = await this.tokenService.findValidToken(token, [
       TokenType.EMAIL_VERIFICATION,
       TokenType.PASSWORD_RESET,
-    ])) as any;
+    ]);
     if (!record) throw new BadRequestException('Invalid or expired token');
 
     // 🔹 Find the user
-    const user = (await this.userService.findById(record.user)) as any;
+    const userId = record.user?.toString();
+    if (!userId) throw new BadRequestException('User not found for this token');
+
+    const user = await this.userService.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
     // 🔹 Check if new password is same as old password
@@ -206,7 +210,7 @@ export class AuthService {
 
     if (record.type === TokenType.EMAIL_VERIFICATION && !user.isVerified) {
       // 1️⃣ Create default theme
-      const theme = (await this.themeService.createDefaultTheme()) as any;
+      const theme = await this.themeService.createDefaultTheme();
 
       // 2️⃣ Update user with theme reference
       await this.userService.update(user._id, {
@@ -225,7 +229,7 @@ export class AuthService {
       });
     }
 
-    await this.tokenService.deleteToken(record._id);
+    await this.tokenService.deleteToken(record._id as string);
     return { message: 'Password set successfully', ok: true };
   }
 
@@ -303,7 +307,6 @@ export class AuthService {
       token: captchaId,
       type: TokenType.CAPTCHA,
       answer: Number(captcha.text), // math result
-      user: null,
       expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 min expiry
     });
 
@@ -324,9 +327,9 @@ export class AuthService {
   // Verify Captcha
   // -------------------------
   async verifyCaptcha(captchaId: string, captchaAnswer: number) {
-    const record = (await this.tokenService.findValidToken(captchaId, [
+    const record = await this.tokenService.findValidToken(captchaId, [
       TokenType.CAPTCHA,
-    ])) as any;
+    ]);
 
     if (!record) throw new BadRequestException('Invalid or expired captcha');
 
@@ -334,7 +337,7 @@ export class AuthService {
       throw new BadRequestException('Captcha answer is incorrect');
     }
     // Delete captcha after verification to prevent reuse
-    await this.tokenService.deleteToken(record._id);
+    await this.tokenService.deleteToken(record._id as string);
 
     return true;
   }

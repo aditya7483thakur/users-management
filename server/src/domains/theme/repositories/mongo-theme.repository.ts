@@ -6,16 +6,16 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Theme } from 'src/domains/theme/schemas/theme.schema';
+import { Theme, ThemeDocument } from 'src/domains/theme/schemas/theme.schema';
 import { MongoRepository } from 'src/infra/database/mongo.repository';
 import { ThemeRepository } from '../interfaces/theme.repository';
 @Injectable()
 export class ThemeMongoRepository
-  extends MongoRepository<Theme>
+  extends MongoRepository<ThemeDocument>
   implements ThemeRepository
 {
   constructor(
-    @InjectModel(Theme.name) private readonly themeModel: Model<Theme>,
+    @InjectModel(Theme.name) private readonly themeModel: Model<ThemeDocument>,
   ) {
     super(themeModel);
   }

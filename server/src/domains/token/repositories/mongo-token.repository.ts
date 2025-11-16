@@ -8,11 +8,11 @@ import { TokenType } from 'src/enums/auth.enums';
 
 @Injectable()
 export class TokenMongoRepository
-  extends MongoRepository<Token>
+  extends MongoRepository<TokenDocument>
   implements TokenRepository
 {
   constructor(
-    @InjectModel(Token.name) private readonly tokenModel: Model<Token>,
+    @InjectModel(Token.name) private readonly tokenModel: Model<TokenDocument>,
   ) {
     super(tokenModel);
   }

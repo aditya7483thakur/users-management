@@ -10,15 +10,8 @@ export class TokenService {
     private readonly tokenRepository: TokenRepository,
   ) {}
 
-  async createToken(data: {
-    user: string | null;
-    token: string;
-    type: TokenType;
-    expiresAt?: Date;
-    newEmail?: string;
-    answer?: number;
-  }) {
-    return this.tokenRepository.create(data as any);
+  async createToken(data: Partial<TokenDocument>) {
+    return this.tokenRepository.create(data);
   }
 
   async deleteToken(id: string) {
