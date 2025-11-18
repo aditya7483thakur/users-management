@@ -2,12 +2,11 @@ import { Logger, Module, OnModuleInit } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { InjectConnection, MongooseModule } from '@nestjs/mongoose';
-import { ConfigModule } from '@nestjs/config';
+
 import { Connection } from 'mongoose';
 import { UserModule } from './domains/user/user.module';
 import { ThemeModule } from './domains/theme/theme.module';
 import { AuthModule } from './domains/auth/auth.module';
-import { TokenModule } from './domains/token/token.module';
 import { AppConfigModule } from './config/config.module';
 import { AppConfigService } from './config/config.service';
 
@@ -24,7 +23,6 @@ import { AppConfigService } from './config/config.service';
     UserModule,
     ThemeModule,
     AuthModule,
-    TokenModule,
   ],
   controllers: [AppController],
   providers: [AppService],

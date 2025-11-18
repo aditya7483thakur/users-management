@@ -1,6 +1,8 @@
+import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { BaseRepository } from 'src/infra/base.repository';
 
+@Injectable()
 export class MongoRepository<T> implements BaseRepository<T> {
   constructor(protected readonly model: Model<T>) {}
 

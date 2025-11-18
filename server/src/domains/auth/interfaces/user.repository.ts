@@ -4,6 +4,4 @@ import { User, UserDocument } from '../../../common/schemas/user.schema';
 
 export interface UserRepository extends BaseRepository<UserDocument> {
   findByEmail(email: string): Promise<UserDocument | null>;
-  findAllWithPagination(filter: any, limit: number): Promise<UserDocument[]>;
-  findByIdWithTheme(userId: string): Promise<UserDocument | null>;
 }

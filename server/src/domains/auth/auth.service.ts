@@ -1,27 +1,33 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import svgCaptcha from 'svg-captcha';
-import { UserService } from '../user/user.service';
 import { v4 as uuidv4 } from 'uuid';
 import { TokenType } from 'src/enums/auth.enums';
-import { ThemeService } from '../theme/theme.service';
 import { JwtService } from '@nestjs/jwt';
-import { TokenService } from '../token/token.service';
-import { EmailService } from '../email/email.service';
+import { EmailService } from '../../common/email.service';
 import { AppConfigService } from 'src/config/config.service';
-import { ObjectId, Types } from 'mongoose';
+import { Types } from 'mongoose';
+import type { TokenRepository } from './interfaces/token.repository';
+import { TokenDocument } from 'src/common/schemas/token.schema';
+import type { UserRepository } from './interfaces/user.repository';
+import { ThemeDocument } from 'src/common/schemas/theme.schema';
+import { MongoRepository } from 'src/infra/database/mongo.repository';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly tokenService: TokenService,
-    private readonly userService: UserService,
-    private readonly themeService: ThemeService,
+    @Inject('TOKEN_REPOSITORY')
+    private readonly tokenRepository: TokenRepository,
+    @Inject('USER_REPOSITORY')
+    private readonly userRepository: UserRepository,
+    @Inject('THEME_REPOSITORY')
+    private readonly themeRepository: MongoRepository<ThemeDocument>,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
     private readonly appConfigService: AppConfigService,
@@ -38,10 +44,10 @@ export class AuthService {
   ) {
     await this.verifyCaptcha(captchaId, captchaAnswer);
 
-    const existingUser = await this.userService.findByEmail(email);
+    const existingUser = await this.userRepository.findByEmail(email);
     if (existingUser) throw new BadRequestException('Email already exists');
 
-    const user = await this.userService.create({
+    const user = await this.userRepository.create({
       name,
       email,
       isVerified: false,
@@ -49,7 +55,7 @@ export class AuthService {
 
     // Generate verification token
     const token = uuidv4();
-    await this.tokenService.createToken({
+    await this.tokenRepository.create({
       user: new Types.ObjectId(user._id),
       token,
       type: TokenType.EMAIL_VERIFICATION,
@@ -91,7 +97,7 @@ export class AuthService {
     captchaAnswer: number,
   ) {
     await this.verifyCaptcha(captchaId, captchaAnswer);
-    const user = await this.userService.findByEmail(email);
+    const user = await this.userRepository.findByEmail(email);
     if (!user || !user.isVerified)
       throw new UnauthorizedException('Invalid credentials');
 
@@ -107,7 +113,7 @@ export class AuthService {
       themeId: user.themeRef.toString(),
     });
     const updatedJwtList = [...(user.jwt || []), jti];
-    await this.userService.update(user._id, { jwt: updatedJwtList });
+    await this.userRepository.update(user._id, { jwt: updatedJwtList });
     return { message: 'Login successful!', token: jwt, ok: true };
   }
 
@@ -115,12 +121,12 @@ export class AuthService {
   // Logout
   // -------------------------
   async logout(userId: string, currentToken: string) {
-    const user = await this.userService.findById(userId);
+    const user = await this.userRepository.findById(userId);
     if (!user) throw new NotFoundException('User not found');
     // Remove the current token from the jwt array
     const updatedJwtList = user.jwt.filter((token) => token !== currentToken);
 
-    await this.userService.update(userId, { jwt: updatedJwtList });
+    await this.userRepository.update(userId, { jwt: updatedJwtList });
 
     return { message: 'Logged out successfully', ok: true };
   }
@@ -129,11 +135,11 @@ export class AuthService {
   // Forgot password → send reset email
   // -------------------------
   async forgotPassword(email: string) {
-    const user = await this.userService.findByEmail(email);
+    const user = await this.userRepository.findByEmail(email);
     if (!user) throw new NotFoundException('User not found');
 
     const token = uuidv4();
-    await this.tokenService.createToken({
+    await this.tokenRepository.create({
       user: new Types.ObjectId(user._id),
       token,
       type: TokenType.PASSWORD_RESET,
@@ -182,17 +188,17 @@ export class AuthService {
     }
 
     // 🔹 Find the token (EMAIL_VERIFICATION or PASSWORD_RESET)
-    const record = await this.tokenService.findValidToken(token, [
+    const record = (await this.tokenRepository.findValidToken(token, [
       TokenType.EMAIL_VERIFICATION,
       TokenType.PASSWORD_RESET,
-    ]);
+    ])) as TokenDocument;
     if (!record) throw new BadRequestException('Invalid or expired token');
 
     // 🔹 Find the user
     const userId = record.user?.toString();
     if (!userId) throw new BadRequestException('User not found for this token');
 
-    const user = await this.userService.findById(userId);
+    const user = await this.userRepository.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
     // 🔹 Check if new password is same as old password
@@ -210,10 +216,13 @@ export class AuthService {
 
     if (record.type === TokenType.EMAIL_VERIFICATION && !user.isVerified) {
       // 1️⃣ Create default theme
-      const theme = await this.themeService.createDefaultTheme();
+      const theme = await this.themeRepository.create({
+        theme: '#ffffff',
+        customThemes: [],
+      });
 
       // 2️⃣ Update user with theme reference
-      await this.userService.update(user._id, {
+      await this.userRepository.update(user._id, {
         passwordHash: hashedPassword,
         isVerified: true,
         jwt: [], // Logout all sessions
@@ -223,13 +232,13 @@ export class AuthService {
       // -------------------------
       // 📘 Normal password reset
       // -------------------------
-      await this.userService.update(user._id, {
+      await this.userRepository.update(user._id, {
         passwordHash: hashedPassword,
         jwt: [], // Logout all sessions
       });
     }
 
-    await this.tokenService.deleteToken(record._id as string);
+    await this.tokenRepository.deleteToken(record._id as string);
     return { message: 'Password set successfully', ok: true };
   }
 
@@ -267,7 +276,7 @@ export class AuthService {
       );
     }
 
-    const user = await this.userService.findById(userId);
+    const user = await this.userRepository.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
     // Verify old password
@@ -278,7 +287,7 @@ export class AuthService {
     const newHashed = await bcrypt.hash(decodedNewPassword, 10);
 
     // Update user — keep only current JWT, clear others
-    await this.userService.update(userId, {
+    await this.userRepository.update(userId, {
       passwordHash: newHashed,
       jwt: [currentToken],
     });
@@ -303,7 +312,7 @@ export class AuthService {
 
     const captchaId = uuidv4();
 
-    await this.tokenService.createToken({
+    await this.tokenRepository.create({
       token: captchaId,
       type: TokenType.CAPTCHA,
       answer: Number(captcha.text), // math result
@@ -327,9 +336,9 @@ export class AuthService {
   // Verify Captcha
   // -------------------------
   async verifyCaptcha(captchaId: string, captchaAnswer: number) {
-    const record = await this.tokenService.findValidToken(captchaId, [
+    const record = (await this.tokenRepository.findValidToken(captchaId, [
       TokenType.CAPTCHA,
-    ]);
+    ])) as TokenDocument;
 
     if (!record) throw new BadRequestException('Invalid or expired captcha');
 
@@ -337,7 +346,7 @@ export class AuthService {
       throw new BadRequestException('Captcha answer is incorrect');
     }
     // Delete captcha after verification to prevent reuse
-    await this.tokenService.deleteToken(record._id as string);
+    await this.tokenRepository.deleteToken(record._id as string);
 
     return true;
   }

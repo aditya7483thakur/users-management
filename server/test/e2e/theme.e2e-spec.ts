@@ -4,7 +4,7 @@ import request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { connectInMemoryDB, clearDB, closeDB } from './setup/test-db';
 import { getModelToken } from '@nestjs/mongoose';
-import { User } from '../../src/domains/user/schemas/user.schema';
+import { User } from '../../src/common/schemas/user.schema';
 import { Token } from '../../src/domains/user/schemas/token.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 

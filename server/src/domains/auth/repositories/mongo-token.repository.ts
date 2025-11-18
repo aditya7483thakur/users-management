@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoRepository } from 'src/infra/database/mongo.repository';
-import { Token, TokenDocument } from '../schemas/token.schema';
+import { Token, TokenDocument } from '../../../common/schemas/token.schema';
 import { TokenRepository } from '../interfaces/token.repository';
 import { TokenType } from 'src/enums/auth.enums';
 
@@ -30,15 +30,5 @@ export class TokenMongoRepository
 
   async deleteToken(token: string): Promise<void> {
     await this.tokenModel.deleteOne({ token });
-  }
-
-  async deleteTokensForUser(userId: string, type?: TokenType): Promise<void> {
-    const query: any = { user: userId };
-    if (type) query.type = type;
-    await this.tokenModel.deleteMany(query);
-  }
-
-  async deleteExpiredTokens(): Promise<void> {
-    await this.tokenModel.deleteMany({ expiresAt: { $lt: new Date() } });
   }
 }

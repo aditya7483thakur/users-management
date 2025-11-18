@@ -1,23 +1,20 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './schemas/user.schema';
 import { UserController } from './user.controller';
 import { UserMongoRepository } from './repositories/mongo-user.repository';
-import { TokenModule } from '../token/token.module';
-import { EmailModule } from '../email/email.module';
+
 import { AppConfigModule } from 'src/config/config.module';
+import { TokenMongoRepository } from './repositories/mongo-token.repository';
+import { CommonModule } from 'src/common/common.module';
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    TokenModule,
-    EmailModule,
-    AppConfigModule,
-  ],
+  imports: [AppConfigModule, CommonModule],
   providers: [
     UserService,
     UserMongoRepository,
     { provide: 'USER_REPOSITORY', useClass: UserMongoRepository },
+
+    TokenMongoRepository,
+    { provide: 'TOKEN_REPOSITORY', useClass: TokenMongoRepository },
   ],
   controllers: [UserController],
   exports: [UserService],

@@ -6,10 +6,19 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtModule } from '@nestjs/jwt';
 import { AppConfigModule } from 'src/config/config.module';
 import { AppConfigService } from 'src/config/config.service';
+import { EmailService } from './email.service';
+import { MongooseModule } from '@nestjs/mongoose';
+import { Token, TokenSchema } from './schemas/token.schema';
+import { Theme, ThemeSchema } from './schemas/theme.schema';
+import { User, UserSchema } from './schemas/user.schema';
 
 @Module({
   imports: [
-    UserModule,
+    MongooseModule.forFeature([
+      { name: Token.name, schema: TokenSchema },
+      { name: Theme.name, schema: ThemeSchema },
+      { name: User.name, schema: UserSchema },
+    ]),
     JwtModule.registerAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],
@@ -26,7 +35,8 @@ import { AppConfigService } from 'src/config/config.service';
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
     },
+    EmailService,
   ],
-  exports: [JwtModule],
+  exports: [JwtModule, EmailService, MongooseModule],
 })
 export class CommonModule {}

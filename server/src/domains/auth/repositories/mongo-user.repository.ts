@@ -16,22 +16,4 @@ export class UserMongoRepository
   async findByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email });
   }
-
-  async findAllWithPagination(
-    filter: any,
-    limit: number,
-  ): Promise<UserDocument[]> {
-    return this.model
-      .find(filter)
-      .select('-passwordHash -jwt')
-      .sort({ _id: 1 })
-      .limit(limit);
-  }
-
-  async findByIdWithTheme(userId: string): Promise<UserDocument | null> {
-    return this.userModel
-      .findById(userId)
-      .populate('themeRef')
-      .select('-passwordHash -jwt');
-  }
 }

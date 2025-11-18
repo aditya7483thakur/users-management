@@ -6,7 +6,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { Theme, ThemeDocument } from 'src/domains/theme/schemas/theme.schema';
+import { Theme, ThemeDocument } from 'src/common/schemas/theme.schema';
 import { MongoRepository } from 'src/infra/database/mongo.repository';
 import { ThemeRepository } from '../interfaces/theme.repository';
 @Injectable()

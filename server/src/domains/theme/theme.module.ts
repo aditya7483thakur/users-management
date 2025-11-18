@@ -1,14 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ThemeService } from './theme.service';
 import { ThemeController } from './theme.controller';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Theme, ThemeSchema } from './schemas/theme.schema';
 import { ThemeMongoRepository } from './repositories/mongo-theme.repository';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Theme.name, schema: ThemeSchema }]),
-  ],
+  imports: [CommonModule],
   controllers: [ThemeController],
   providers: [
     ThemeService,

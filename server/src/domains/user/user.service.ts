@@ -7,19 +7,21 @@ import {
 import { UpdateUserDto } from './dto/update-user.dto';
 import { TokenType } from 'src/enums/auth.enums';
 import { v4 as uuidv4 } from 'uuid';
-import { User, UserDocument } from './schemas/user.schema';
+import { User, UserDocument } from '../../common/schemas/user.schema';
 import type { UserRepository } from './interfaces/user.repository';
-import { TokenService } from '../token/token.service';
-import { EmailService } from '../email/email.service';
+import { EmailService } from '../../common/email.service';
 import { AppConfigService } from 'src/config/config.service';
 import { Types } from 'mongoose';
+import type { TokenRepository } from './interfaces/token.repository';
+import { TokenDocument } from 'src/common/schemas/token.schema';
 
 @Injectable()
 export class UserService {
   constructor(
     @Inject('USER_REPOSITORY')
     private readonly userRepository: UserRepository,
-    private readonly tokenService: TokenService,
+    @Inject('TOKEN_REPOSITORY')
+    private readonly tokenRepository: TokenRepository,
     private readonly emailService: EmailService,
     private readonly appConfigService: AppConfigService,
   ) {}
@@ -71,7 +73,7 @@ export class UserService {
       const verificationUrl = `${this.appConfigService.frontendUrl}/verify-email?token=${token}`;
 
       // Store verification token
-      await this.tokenService.createToken({
+      await this.tokenRepository.create({
         user: new Types.ObjectId(userId),
         token,
         type: TokenType.EMAIL_UPDATE,
@@ -156,9 +158,9 @@ export class UserService {
   // -------------------------
   async verifyEmailUpdate(token: string) {
     // 1️⃣ Find the token record for EMAIL_UPDATE
-    const record = await this.tokenService.findValidToken(token, [
+    const record = (await this.tokenRepository.findValidToken(token, [
       TokenType.EMAIL_UPDATE,
-    ]);
+    ])) as TokenDocument;
 
     if (!record) {
       throw new BadRequestException('Invalid or expired token');
@@ -197,7 +199,7 @@ export class UserService {
     });
 
     // 6️⃣ Delete the used token
-    await this.tokenService.deleteToken(record._id.toString());
+    await this.tokenRepository.deleteToken(record._id.toString());
 
     return { message: 'Email updated successfully', ok: true };
   }
